@@ -68,7 +68,8 @@ def document_load_split_embed(path: str, type=Filetypes.OTHER):
         case Filetypes.OTHER:
             print("Loading other types of files")
             loader = DirectoryLoader(path=path,
-                                     exclude=['**/*.pdf', '**/*.txt'],
+                                     exclude=['**/*.pdf', '**/*.txt',
+                                              '**/README.md'],
                                      use_multithreading=True)
     # Load documents
     documents = loader.load()
