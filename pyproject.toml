@@ -3,5 +3,14 @@ name = "job-hunt-prep"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
-requires-python = ">=3.14"
-dependencies = []
+requires-python = "==3.11.5"
+dependencies = [
+  "langchain",
+  "langchain-community",
+  "dotenv",
+  "langchain-ollama",
+  "langchain-chroma",
+  "unstructured",
+  "cryptography",
+  "pypdf"
+]
