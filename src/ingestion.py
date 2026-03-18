@@ -6,9 +6,12 @@ J. A. Moreno
 2026
 """
 
+import asyncio
+from typing import List
 from enum import Enum
 from pathlib import Path
 from dotenv import load_dotenv
+from langchain_core.documents import Document
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.document_loaders import (DirectoryLoader,
     PyPDFDirectoryLoader, TextLoader)
@@ -22,7 +25,7 @@ load_dotenv()
 CHUNK_SIZE = 4000
 CHUNK_OVERLAP = 100
 EMBEDDINGS_MODEL = "nomic-embed-text-v2-moe"
-NUM_CTX = 8000
+BATCH_SIZE = 50
 
 # Define an enumeration for file types
 class Filetypes(Enum):
@@ -41,7 +44,7 @@ vector_store_path = Path(__file__).absolute().parents[1] / "./data/embeddings/"
 splitter = RecursiveCharacterTextSplitter(chunk_size=CHUNK_SIZE)
 
 # Create embeddings
-embeddings = OllamaEmbeddings(model=EMBEDDINGS_MODEL, num_gpu=1, num_ctx=NUM_CTX)
+embeddings = OllamaEmbeddings(model=EMBEDDINGS_MODEL, num_gpu=1)
 
 # Create vector store
 vector_store = Chroma(persist_directory=vector_store_path.__str__(),
@@ -49,7 +52,48 @@ vector_store = Chroma(persist_directory=vector_store_path.__str__(),
 
 # Define data ingestion pipeline methods.
 
-def document_load_split_embed(path: str, type=Filetypes.OTHER):
+async def index_documents_async(documents: List[Document],
+                                batch_size: int = BATCH_SIZE):
+    """Process documents in batches asynchronously"""
+
+    # Create batches
+    batches = [
+        documents[i : i + batch_size] for i in range(
+            0, len(documents), batch_size
+                   )
+    ]
+
+    print(f"Vector store indexing: Split into {len(batches)} of {batch_size} docs each")
+
+    # Process all batches concurrently
+    async def add_batch(batch: List[Document], batch_num: int):
+        try:
+            await vector_store.aadd_documents(batch)
+            print(
+                f"VectorStore Indexing: Successfully added {batch_num}/{len(batches)} ({len(batch)} documents)"
+            )
+        except Exception as e:
+            print(f"VectorStore Indexing: Failed to add batch {batch_num} - {e}")
+            return False
+        return True
+
+    # Process batches
+    tasks = [add_batch(batch, i + 1) for i, batch in enumerate(batches)]
+    results = await asyncio.gather(*tasks, return_exceptions=True)
+
+    # Count successful batches
+    successfull = sum(1 for result in results if result is True)
+
+    if successfull == len(batches):
+        print(
+            f"VectorStore Indexing: All batches processed successfully! ({successfull}/{len(batches)})"
+        )
+    else:
+        print(
+            f"VectorStore Indexing: Processed {successfull}/{len(batches)} batches successfully"
+        )
+
+async def document_load_split_embed(path: str, type=Filetypes.OTHER):
     """
     Method used to load, split, and embed documents.
     Provide type as in "pdf", "txt", or "other".
@@ -71,8 +115,8 @@ def document_load_split_embed(path: str, type=Filetypes.OTHER):
                                      exclude=['**/*.pdf', '**/*.txt',
                                               '**/README.md'],
                                      use_multithreading=True)
-    # Load documents
-    documents = loader.load()
+    # Load documents concurrently
+    documents = await loader.aload()
     # Split into chunks
     print ("Splitting...")
     chunks = splitter.split_documents(documents)
@@ -80,25 +124,25 @@ def document_load_split_embed(path: str, type=Filetypes.OTHER):
 
     # Ingest
     print("Ingesting...")
-    vector_store.from_documents(chunks, embeddings)
+    await index_documents_async(chunks)
     print("Done ingesting.")
 
 
 
 # Define the ingestion pipeline
-def run_ingestion_pipeline(document_path: Path):
+async def run_ingestion_pipeline(document_path: Path):
     """
     Method that runs a ingestion pipeline where we will load all
     documents found in the input document_path and create 
     a local vector store with Chroma.
     """
-    document_load_split_embed(document_path.__str__(),
+    await document_load_split_embed(str(document_path),
                               Filetypes.PDF)
-    document_load_split_embed(document_path.__str__(),
+    await document_load_split_embed(str(document_path),
                               Filetypes.TXT)
-    document_load_split_embed(document_path.__str__(),
+    await document_load_split_embed(str(document_path),
                               Filetypes.OTHER)
 
 
 if __name__ == "__main__":
-    run_ingestion_pipeline(document_path)
+    asyncio.run(run_ingestion_pipeline(document_path))
