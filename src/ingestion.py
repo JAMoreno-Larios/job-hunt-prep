@@ -32,10 +32,10 @@ class Filetypes(Enum):
 
 
 # Define the user's data path
-document_path = Path("./data/user-data/").resolve()
+document_path = Path(__file__).absolute().parents[1] / "data/user-data"
 
 # Define the vector store location
-vector_store_path = Path("./data/embeddings/").resolve()
+vector_store_path = Path(__file__).absolute().parents[1] / "./data/embeddings/"
 
 # Instantiate character splitter.
 splitter = RecursiveCharacterTextSplitter(chunk_size=CHUNK_SIZE)
