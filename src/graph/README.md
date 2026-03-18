@@ -25,7 +25,7 @@ text.
 
 The graph files would be:
 - `state.py`: Stores the graph state definitions
-- `search_node.py`: Implements database search and web parsing.
+- `search.py`: Implements database search and web parsing.
 - `input.py`: Deals with user initial query.
 - `response.py`: Takes care of drafting a response with the data we've
 gathered so far. Include user feedback and saving routine.
