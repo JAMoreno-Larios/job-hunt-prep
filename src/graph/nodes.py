@@ -4,10 +4,10 @@ J. A. Moreno
 2026
 """
 
+from logging import exception
 from state import JobPrepState
 from dotenv import load_dotenv
-from langgraph.types import Command, Literal
-from langchain_community.document_loaders.url import UnstructuredURLLoader
+from langchain_community.document_loaders import SeleniumURLLoader
 
 import llm_setup
 import prompts
@@ -26,19 +26,21 @@ def search_user_db(state: JobPrepState):
     Retrieves the relevant information for the query
     """
     query = state.get('distilled_query')
-    retrieved_docs = llm.retriever.invoke(query, k=10)
-    # Serialize documents for the model
-    serialized = "\n\n".join(
-        (
-            f"Source: {doc.metadata.get('source', 'Unknown')}" +
-                    f"\n\nContent: {doc.page_content}"
+    try:
+        retrieved_docs = llm.retriever.invoke(str(query), k=10)
+        # Serialize documents for the model
+        serialized = "\n\n".join(
+            (
+                f"Source: {doc.metadata.get('source', 'Unknown')}" +
+                        f"\n\nContent: {doc.page_content}"
+            )
+            for doc in retrieved_docs
         )
-        for doc in retrieved_docs
-    )
-
-    # Return serialized and raw documents
-    return {"serialized_documents": serialized,
-            "retrieved_documents": retrieved_docs}
+        # Return serialized and raw documents
+        return {"serialized_documents": serialized,
+                "retrieved_documents": retrieved_docs}
+    except Exception:
+        exception("Search turned no elemments")
 
 # Scrap the job posting URL
 # TODO: Check how to turn this into a proper node
@@ -47,16 +49,18 @@ def scrap_job_posting(state: JobPrepState):
     Scraps the job post and loads it as a document 
     using the UnstructuredURLLoader.
     """
+    print("Scrapping job post")
     job_url = state.get('job_post_url')
+
     # Create the url loader
-    loader = UnstructuredURLLoader([job_url])
+    loader = SeleniumURLLoader([job_url],)
     # Load data
     retrieved_post = loader.load()
     # Serialize
     serialized = "\n\n".join(
         (
             f"Source: {doc.metadata.get('source', 'Unknown')}" +
-                    f"\n\nContent: {doc.page_content}"
+                    f"\n\nContent: {doc.metadata.get('description')}"  # Specific to SeleniumURLLoader
         )
         for doc in retrieved_post
     )
@@ -73,11 +77,13 @@ def distill_search_query(state: JobPrepState):
     then retrieves relevant user information.
     """
 
+    print("Distilling search query")
     # Format the prompt used to obtain the search terms
     formatted_prompt = prompts.distill_query.format(
         job_post=state['serialized_job_post'],
         user_query=state['user_query']
     )
+    # breakpoint()
     distilled_query = llm.llm.invoke(formatted_prompt)
 
     # Now we use can use the refined query to extract user information.
