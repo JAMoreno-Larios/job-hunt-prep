@@ -23,5 +23,6 @@ class JobPrepState(TypedDict):
     serialized_job_post: str | None # From web page
 
     # Generated content
+    distilled_query: str
     draft_response: str | None
     messages: list[str] | None
