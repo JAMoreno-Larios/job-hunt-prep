@@ -4,12 +4,8 @@ J. A. Moreno
 2026
 """
 
-from pathlib import Path
 from state import JobPrepState
 from dotenv import load_dotenv
-from langchain_ollama import ChatOllama, OllamaEmbeddings
-from langchain.messages import HumanMessage
-from langchain_chroma import Chroma
 from langgraph.types import Command, Literal
 from langchain_community.document_loaders.url import UnstructuredURLLoader
 
