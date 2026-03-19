@@ -8,6 +8,8 @@ J. A. Moreno
 
 from typing import TypedDict
 
+from langchain_core.documents import Document
+
 class JobPrepState(TypedDict):
     
     # Raw user query
@@ -15,8 +17,10 @@ class JobPrepState(TypedDict):
     job_post_url: str
 
     # Raw search results
-    vector_store_search_results: list[str] | None  # Raw document chunks
-    job_post_contents: list[str] | None # Same as above
+    retrieved_documents: list[Document] | None  # Raw docs
+    serialized_documents: str | None  # Serialized content
+    job_post_documents: list[Document] | None
+    serialized_job_post: str | None # From web page
 
     # Generated content
     draft_response: str | None
