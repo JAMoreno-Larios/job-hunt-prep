@@ -1,11 +1,11 @@
 """
-Implementation for our search and web retrieval nodes
+Implementation for our workflow nodes
 J. A. Moreno
 2026
 """
 
-from state import JobPrepState
 from pathlib import Path
+from state import JobPrepState
 from dotenv import load_dotenv
 from langchain_ollama import ChatOllama, OllamaEmbeddings
 from langchain.messages import HumanMessage
@@ -13,25 +13,15 @@ from langchain_chroma import Chroma
 from langgraph.types import Command, Literal
 from langchain_community.document_loaders.url import UnstructuredURLLoader
 
+import llm_setup
+
 # Load environment variables
 load_dotenv()
 
-# Define the vector store location
-vector_store_path = Path(__file__).absolute().parents[2] / "./data/embeddings/"
+# Initialize LLM
+llm = llm_setup.LLM()
 
-# Define constants
-CHUNK_SIZE = 4000
-CHUNK_OVERLAP = 100
-EMBEDDINGS_MODEL = "nomic-embed-text-v2-moe"
-LLM_MODEL = "qwen3.5:9b"
-NUM_CTX = 8000
-
-# Initialize components
-llm = ChatOllama(model=LLM_MODEL)
-embeddings = OllamaEmbeddings(model=EMBEDDINGS_MODEL)
-vector_store = Chroma(persist_directory=vector_store_path.__str__(),
-                      embedding_function=embeddings)
-
+### DATA NODES
 # Search in vector store
 # TODO: Check how to turn this into a proper node
 def search_user_db(state: JobPrepState):
@@ -39,7 +29,7 @@ def search_user_db(state: JobPrepState):
     Retrieves the relevant information for the query
     """
     query = state.get('user_query')
-    retrieved_docs = vector_store.as_retriever().invoke(query, k=10)
+    retrieved_docs = llm.retriever.invoke(query, k=10)
     # Serialize documents for the model
     serialized = "\n\n".join(
         (
@@ -76,3 +66,9 @@ def scrap_job_posting(state: JobPrepState):
     # Return serialized and raw docs
     return {"serialized_job_post": serialized,
             "job_post_documents": retrieved_post}
+
+
+## USER INPUT PROCESSING NODES
+
+
+## ANSWER GENERATION NODES
