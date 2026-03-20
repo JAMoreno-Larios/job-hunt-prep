@@ -22,7 +22,7 @@ from langchain_ollama import OllamaEmbeddings
 load_dotenv()
 
 # Define constants
-CHUNK_SIZE = 4000
+CHUNK_SIZE = 1000
 CHUNK_OVERLAP = 100
 EMBEDDINGS_MODEL = "nomic-embed-text-v2-moe"
 BATCH_SIZE = 50
