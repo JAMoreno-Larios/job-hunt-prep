@@ -22,7 +22,6 @@ vector_store_path = Path(__file__).absolute().parents[2] / "./data/embeddings/"
 
 # Define constants
 EMBEDDINGS_MODEL = "nomic-embed-text-v2-moe"
-# LLM_MODEL = "qwen3.5:9b"
 LLM_MODEL = "qwen3:8b"
 NUM_CTX = 4096
 NUM_THREADS = None
