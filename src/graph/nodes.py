@@ -84,7 +84,10 @@ def distill_search_query(state: JobPrepState):
         user_query=state['user_query']
     )
     # breakpoint()
-    distilled_query = llm.llm.invoke(formatted_prompt)
+    distilled_query = (llm.
+        llm.
+        with_structured_output(prompts.DistilledQuerySchema).
+        invoke(formatted_prompt))
 
     # Now we use can use the refined query to extract user information.
     return {"distilled_query": distilled_query}
