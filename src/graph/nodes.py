@@ -27,7 +27,7 @@ def search_user_db(state: JobPrepState):
     """
     query = state.get('distilled_query')
     try:
-        retrieved_docs = llm.retriever.invoke(str(query), k=10)
+        retrieved_docs = llm.retriever.invoke(str(query), k=5)
         # Serialize documents for the model
         serialized = "\n\n".join(
             (

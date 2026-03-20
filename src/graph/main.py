@@ -25,13 +25,9 @@ def main():
         'job_post_url': job_post_url
     }
     
-    for chunk in graph.stream(
-        initial_state, stream_mode="messages",
-        version="v2"):
-        if chunk["type"] == "messages":
-            message_chunk, metadata = chunk["data"]
-            if message_chunk.content:
-                print(message_chunk.content, end="", flush=True)
+ 
+    for chunk in graph.stream(initial_state):
+        print(chunk, end='')
 
 if __name__ == "__main__":
     main()

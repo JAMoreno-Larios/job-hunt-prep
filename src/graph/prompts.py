@@ -14,18 +14,28 @@ distill_query = ChatPromptTemplate(
     [
         ("system", 
          """
-         You are a Human Resources expert specialized in
-         software engineering.
-         This is the job post information:
-         -------------
-         {job_post}
-         -------------
+You are a Human Resources expert.
+You have a job post description and a user query that is a 
+job interview question.
 
-         Generate a semantic search query based on the user
-         input and job post. Focus on keywords, technologies
-         and expertise areas menctioned in the job post.
-         """),
-        ("user", "{user_query}")
+### JOB DESCRIPTION
+-------------
+{job_post}
+-------------
+
+### END JOB DESCRIPTION
+
+### USER QUERY
+-------------
+{user_query}
+-------------
+### END USER QUERY
+
+Generate a semantic search query that will retrieve the information needed to
+answer the query from a vector store. Be sure to limit the
+search to the last five years from now.
+         """.strip()),
+        #        ("user", "{user_query}")
     ]
 )
 
@@ -33,27 +43,34 @@ draft_answer = ChatPromptTemplate(
     [
         ("system", 
          """
-         You are a Human Resources expert specialized in
-         software engineering.
-         This is the job post information:
-         -------------
-         {job_post}
-         -------------
-         
-         This is the relevant user information:
-         -------------
-         {user_info}
-         -------------
-         
-         This is the original user query:
-         -------------
-         {user_query}
-         -------------
+You are a Human Resources expert.
+You have a job post description, the user's relevant information,
+and a user query that is a job interview question.
 
-         Draft an answer based on the user query. Answer questions in
-         first person, using consice language and a profesional tone.
-         You must use the provided job post and user information
-         to write the answer.
+### JOB DESCRIPTION
+-------------
+{job_post}
+-------------
+
+### END JOB DESCRIPTION
+
+### USER INFO
+-------------
+{user_info}
+-------------
+
+### END USER INFO
+
+### USER QUERY
+-------------
+{user_query}
+-------------
+### END USER QUERY
+
+Draft an answer based on the user query. Answer questions in
+first person, using consice language and a profesional tone.
+You must use the provided job post and user information
+to write the answer.
 
          """),
     ]
