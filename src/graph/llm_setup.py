@@ -65,6 +65,13 @@ class LLM(BaseLLMConfig):
         self._embeddings = OllamaEmbeddings(model=EMBEDDINGS_MODEL)
         self._vector_store = Chroma(persist_directory=str(vector_store_path),
                       embedding_function=self._embeddings)
+
+
+        # Retrieve documents above certail score.
+        # self._retriever = self._vector_store.as_retriever(
+        #     search_type="similarity_score_threshold",
+        #     search_kwargs={"score_threshold": 0.6}
+        # )
         self._retriever = self._vector_store.as_retriever()
 
     @property
