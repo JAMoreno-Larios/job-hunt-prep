@@ -16,4 +16,5 @@ dependencies = [
   "cryptography",
   "pypdf",
   "pyright>=1.1.408",
+  "streamlit>=1.55.0",
 ]
