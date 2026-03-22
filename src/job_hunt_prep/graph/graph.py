@@ -33,5 +33,3 @@ def create_graph():
 
     # Compile the graph
     return workflow.compile()
-
-graph = create_graph()

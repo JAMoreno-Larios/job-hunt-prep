@@ -7,9 +7,11 @@ J. A. Moreno
 2026
 """
 
-from graph import graph
+from graph import create_graph
 from state import JobPrepState
 
+# Instantiate graph
+graph = create_graph()
 # Generate the workflow diagram
 graph.get_graph().draw_mermaid_png(output_file_path="workflow.png")
 
