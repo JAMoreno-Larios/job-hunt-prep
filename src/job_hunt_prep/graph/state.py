@@ -6,13 +6,16 @@ J. A. Moreno
 2026
 """
 
-from typing import TypedDict
 
 from langchain_core.documents import Document
+from langgraph.graph import MessagesState
 
-class JobPrepState(TypedDict):
+class JobPrepState(MessagesState):
     
     # Raw user query
+    raw_query: str
+    
+    # Parsed query
     user_query: str
     job_post_url: str
 
@@ -25,4 +28,3 @@ class JobPrepState(TypedDict):
     # Generated content
     distilled_query: str | None
     draft_response: str | None
-    messages: list[str] | None
