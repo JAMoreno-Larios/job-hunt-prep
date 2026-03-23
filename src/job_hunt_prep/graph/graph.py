@@ -9,6 +9,7 @@ J. A. Moreno
 
 
 import nodes
+from typing import Any, Iterator
 from state import InputState, JobPrepState, OutputState
 from langgraph.graph import StateGraph, START, END
 
@@ -50,21 +51,17 @@ class Graph:
         self._app.get_graph().draw_mermaid_png(output_file_path=output_file_path)
 
 
-    def run_agent(self, query) -> None:
+    def run_agent(self, query) -> Iterator[dict[str, Any] | Any]:
         """
         Runs the agent workflow, forms the user input
         """
         # Form input
         messages = [{"role": "user", "content": query}]
-        # Invoke the graph
-        for part in self._app.stream(
+        # Invoke the graph as a stream
+        return self._app.stream(
             {
                 "messages": messages
             },
             stream_mode=["messages"],
-            version="v2"):
-            if part["type"] == "messages":
-                # MessagesStreamPart — (message_chunk, metadata) from LLM calls
-                msg, metadata = part["data"]
-                print(msg.content, end="", flush=True)
+            version="v2")
 

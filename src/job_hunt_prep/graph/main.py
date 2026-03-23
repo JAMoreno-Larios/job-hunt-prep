@@ -24,7 +24,12 @@ What's the best way to answer?
     #Initialize graph
     graph = Graph()
     graph.draw_mermaid_png()
-    graph.run_agent(user_query)
+    
+    for part in graph.run_agent(user_query):
+        if part["type"] == "messages":
+            # MessagesStreamPart — (message_chunk, metadata) from LLM calls
+            msg, metadata = part["data"]
+            print(msg.content, end="", flush=True)
 
 if __name__ == "__main__":
     main()
