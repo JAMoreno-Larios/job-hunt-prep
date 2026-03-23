@@ -8,7 +8,7 @@ J. A. Moreno
 """
 
 from streamlit.runtime.state import session_state
-from graph.graph import create_graph
+from graph import Graph
 import streamlit as st
 from dotenv import load_dotenv
 from typing import Optional, Set
@@ -29,6 +29,7 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
+
 def create_sources_string(source_urls: Set[str]) -> str:
     if not source_urls:
         return ""
@@ -36,7 +37,7 @@ def create_sources_string(source_urls: Set[str]) -> str:
     sources_list.sort()
     sources_string = "sources:\n"
     for i, source in enumerate(sources_list):
-        sources_string += f"{i+1}. {source}\n"
+        sources_string += f"{i + 1}. {source}\n"
     return sources_string
 
 
@@ -116,30 +117,11 @@ with st.form(key="chat_form"):
     submit_clicked = st.form_submit_button("Submit")
 
 if submit_clicked and prompt:
-    with st.spinner("Generating response..."):
-        # Lazy import so app can render instantly even if backend init is slow.
 
-        graph = create_graph()
-        generated_response = graph(query=prompt)
-
-        sources = set(doc.metadata["source"] for doc in generated_response["context"])
-        formatted_response = (
-            f"{generated_response['answer']} \n\n {create_sources_string(sources)}"
-        )
-
-        st.session_state["user_prompt_history"].append(prompt)
-        st.session_state["chat_answers_history"].append(formatted_response)
-        st.session_state["chat_history"].append(("human", prompt))
-        st.session_state["chat_history"].append(("ai", generated_response["answer"]))
-
-# Display chat history
-if st.session_state["chat_answers_history"]:
-    for generated_response, user_query in zip(
-        st.session_state["chat_answers_history"],
-        st.session_state["user_prompt_history"],
-    ):
-        st.chat_message("user").write(user_query)
-        st.chat_message("assistant").write(generated_response)
+    graph = Graph()
+    st.session_state["chat_history"].append(("human", prompt))
+    st.chat_message("user").write(prompt)
+    st.chat_message("ai").write_stream(graph.run_agent_streamlit(prompt))
 
 
 # Add a footer
