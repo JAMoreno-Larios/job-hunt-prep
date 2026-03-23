@@ -18,11 +18,12 @@ from langchain_chroma import Chroma
 load_dotenv()
 
 # Define the vector store location
-vector_store_path = Path(__file__).absolute().parents[2] / "./data/embeddings/"
+vector_store_path = Path(__file__).absolute().parents[3] / "./data/embeddings/"
 
 # Define constants
 EMBEDDINGS_MODEL = "nomic-embed-text-v2-moe"
-LLM_MODEL = "qwen3:8b"
+# LLM_MODEL = "qwen3:8b"
+LLM_MODEL = "qwen3.5:9b"
 NUM_CTX = 4096
 NUM_THREADS = None
 NUM_GPU = 999  # Uses all GPUs installed
