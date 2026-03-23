@@ -58,7 +58,7 @@ def scrap_job_posting(state: JobPrepState) -> JobPrepState:
     Scraps the job post and loads it as a document 
     using the UnstructuredURLLoader.
     """
-    print("Scrapping job post")
+    print("\nScrapping job post\n")
     job_url = state.get('job_post_url')
 
     # Create the url loader
@@ -83,7 +83,7 @@ def distill_search_query(state: JobPrepState) -> JobPrepState:
     then retrieves relevant user information.
     """
 
-    print("Distilling search query")
+    print("\nDistilling search query\n")
     # Format the prompt used to obtain the search terms
     formatted_prompt = prompts.distill_query.format(
         job_post=state['serialized_job_post'],
