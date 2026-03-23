@@ -8,6 +8,7 @@ J. A. Moreno
 2026
 """
 
+from typing import TypedDict
 from langchain_core.prompts import ChatPromptTemplate
 from pydantic import BaseModel, Field, HttpUrl
 
@@ -59,6 +60,7 @@ Generate a semantic search query that will retrieve the information needed to
 answer the query from a vector store that contains the candidate's work
 experience (resumes, cv, publications, grant applications). Use consice
 wording that can gather as diverse information as possible.
+Write as a valid JSON output named distill_query.
          """.strip()),
     ]
 )
@@ -91,11 +93,25 @@ and a user query that is a job interview question.
 -------------
 ### END USER QUERY
 
-Draft an answer based on the user query. Answer questions in
-first person, using consice language and a profesional tone.
-You must use the provided job post and user information
-to write the answer.
+Draft an answer based on the user query and experience.
+Answer questions in first person, using consice language and a profesional tone.
+The answer must be grounded on the user information and be relevant
+to the job post and initial query.
 
          """),
     ]
 )
+
+class DistilledQuerySchema(TypedDict):
+    """
+    Used to define the output for our distilled_query node
+    """
+    distilled_query: str | None
+
+class ProcessUserInputSchema(TypedDict):
+    """
+    We take a natural-language user input that contains the
+    URL for job_post_url and a job related user_query.
+    """
+    job_post_url: str | None
+    user_query: str | None

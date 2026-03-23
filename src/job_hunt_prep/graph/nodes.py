@@ -92,7 +92,7 @@ def distill_search_query(state: JobPrepState) -> JobPrepState:
     response = (llm.
         llm.
         with_structured_output(prompts.DistilledQuerySchema,
-                               strict=False,
+                               strict=True,
                                method="json_schema",
                                ).
         invoke(formatted_prompt))
@@ -107,7 +107,6 @@ def search_user_db(state: JobPrepState) -> JobPrepState:
     Retrieves the relevant information for the query
     """
     query = state.get('distilled_query')
-    breakpoint()
     try:
         retrieved_docs = llm.retriever.invoke(str(query), k=5)
         # Serialize documents for the model
