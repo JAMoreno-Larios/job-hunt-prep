@@ -57,3 +57,14 @@ class Graph:
         return self._app.stream(
             {"messages": messages}, stream_mode=["messages"], version="v2"
         )
+
+    def run_agent_streamlit(self, query):
+        """
+        Runs the agent workflow, forms the user input
+        """
+        # Invoke the graph as a stream
+        for part in self.run_agent(query):
+            if part["type"] == "messages":
+                # MessagesStreamPart — (message_chunk, metadata) from LLM calls
+                msg, metadata = part["data"]
+                yield msg.content
