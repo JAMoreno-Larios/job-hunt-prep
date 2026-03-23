@@ -7,21 +7,20 @@ J. A. Moreno
 2026
 """
 
-
-import nodes
+from . import nodes
 from typing import Any, Iterator
-from state import InputState, JobPrepState, OutputState
+from .state import InputState, JobPrepState, OutputState
 from langgraph.graph import StateGraph, START, END
 
-class Graph:
 
+class Graph:
     def __init__(self) -> None:
         """
         Creates the graph when called.
         """
-        workflow = StateGraph(JobPrepState,
-                              input_schema=InputState,
-                              output_schema=OutputState)
+        workflow = StateGraph(
+            JobPrepState, input_schema=InputState, output_schema=OutputState
+        )
 
         # Add nodes
         workflow.add_node("process_user_input", nodes.process_user_input)
@@ -41,15 +40,12 @@ class Graph:
         # Compile the graph
         self._app = workflow.compile()
 
-
     @property
     def get_graph(self):
         return self._app.get_graph()
 
-
     def draw_mermaid_png(self, output_file_path="workflow.png"):
         self._app.get_graph().draw_mermaid_png(output_file_path=output_file_path)
-
 
     def run_agent(self, query) -> Iterator[dict[str, Any] | Any]:
         """
@@ -59,9 +55,5 @@ class Graph:
         messages = [{"role": "user", "content": query}]
         # Invoke the graph as a stream
         return self._app.stream(
-            {
-                "messages": messages
-            },
-            stream_mode=["messages"],
-            version="v2")
-
+            {"messages": messages}, stream_mode=["messages"], version="v2"
+        )

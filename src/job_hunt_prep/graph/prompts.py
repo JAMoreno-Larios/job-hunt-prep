@@ -10,7 +10,6 @@ J. A. Moreno
 
 from typing import TypedDict
 from langchain_core.prompts import ChatPromptTemplate
-from pydantic import BaseModel, Field, HttpUrl
 
 
 raw_query = ChatPromptTemplate(
