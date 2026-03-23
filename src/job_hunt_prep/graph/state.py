@@ -7,17 +7,30 @@ J. A. Moreno
 """
 
 
+from typing import TypedDict
 from langchain_core.documents import Document
 from langgraph.graph import MessagesState
 
-class JobPrepState(MessagesState):
+
+class ParsedUserInputSchema(TypedDict):
+    """
+    We take a natural-language user input that contains the
+    URL for job_post_url and a job related user_query.
+    """
+    job_post_url: str | None
+    user_query: str | None
+
+
+class DistilledQuerySchema(TypedDict):
+    """
+    Used to define the output for our distilled_query node
+    """
+    distilled_query: str | None
+
+class JobPrepState(ParsedUserInputSchema, DistilledQuerySchema, MessagesState):
     
     # Raw user query
     raw_query: str
-    
-    # Parsed query
-    user_query: str
-    job_post_url: str
 
     # Raw search results
     retrieved_documents: list[Document] | None  # Raw docs
@@ -26,5 +39,4 @@ class JobPrepState(MessagesState):
     serialized_job_post: str | None # From web page
 
     # Generated content
-    distilled_query: str | None
     draft_response: str | None

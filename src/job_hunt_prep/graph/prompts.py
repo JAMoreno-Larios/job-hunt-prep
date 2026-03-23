@@ -9,7 +9,30 @@ J. A. Moreno
 """
 
 from langchain_core.prompts import ChatPromptTemplate
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, HttpUrl
+
+
+raw_query = ChatPromptTemplate(
+    [
+        ("system", 
+         """
+You are a Human Resources expert.
+The user will provide a query containing a job interview query and
+the related job post URL.
+
+### USER RAW QUERY
+-------------
+{raw_query}
+-------------
+### END USER RAW QUERY
+
+Identify the job_post_url and user_query from the input.
+Write it as a valid JSON.
+
+         """.strip()),
+    ]
+)
+
 
 distill_query = ChatPromptTemplate(
     [
@@ -37,7 +60,6 @@ answer the query from a vector store that contains the candidate's work
 experience (resumes, cv, publications, grant applications). Use consice
 wording that can gather as diverse information as possible.
          """.strip()),
-        #        ("user", "{user_query}")
     ]
 )
 
@@ -77,9 +99,3 @@ to write the answer.
          """),
     ]
 )
-
-class DistilledQuerySchema(BaseModel):
-    """
-    Used to define the output for our distilled_query node
-    """
-    distilled_query: str | None = Field(description="A semantic search query based on the user's query and job post content")
