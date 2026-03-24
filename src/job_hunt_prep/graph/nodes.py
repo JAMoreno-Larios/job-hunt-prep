@@ -29,7 +29,8 @@ def process_user_input(state: InputState) -> JobPrepState:
     """
     # Format the propt to obtain the user query and
     # job post URL
-    raw_query = state["messages"][0].content
+    raw_query = state["messages"][-1].content
+    breakpoint()
 
     formatted_prompt = prompts.raw_query.format(raw_query=raw_query)
 
@@ -52,7 +53,6 @@ def process_user_input(state: InputState) -> JobPrepState:
 
 
 ### DATA NODES
-
 
 # Scrap the job posting URL
 def scrap_job_posting(state: JobPrepState) -> JobPrepState:
@@ -131,7 +131,6 @@ def search_user_db(state: JobPrepState) -> JobPrepState:
 
 ## ANSWER GENERATION NODES
 
-
 def draft_answer(state: JobPrepState) -> OutputState:
     formatted_prompt = prompts.draft_answer.format(
         job_post=state["serialized_job_post"],
@@ -140,3 +139,7 @@ def draft_answer(state: JobPrepState) -> OutputState:
     )
     response = llm.llm.invoke(formatted_prompt)
     return {"draft_response": response}
+
+
+def draft_evaluator(state: JobPrepState) -> JobPrepState:
+    """User evaluates the draft"""
