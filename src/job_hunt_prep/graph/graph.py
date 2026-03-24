@@ -1,5 +1,4 @@
-"""
-graph.py
+""" graph.py
 
 Here we wire all our nodes into a graph
 
@@ -12,7 +11,11 @@ from typing import Any, Iterator
 from .state import InputState, JobPrepState, OutputState
 from langgraph.graph import StateGraph, START, END
 from langgraph.cache.memory import InMemoryCache
+from langgraph.checkpoint.memory import InMemorySaver
 from langgraph.types import CachePolicy
+
+
+checkpointer = InMemorySaver()
 
 
 class Graph:
@@ -41,7 +44,8 @@ class Graph:
         workflow.add_edge("draft_answer", END)
 
         # Compile the graph
-        self._app = workflow.compile(cache=InMemoryCache())
+        self._app = workflow.compile(cache=InMemoryCache(),
+                                     checkpointer=checkpointer)
 
     @property
     def get_graph(self):
@@ -54,11 +58,21 @@ class Graph:
         """
         Runs the agent workflow, forms the user input
         """
+    
+    # Define configuration
+        config = {
+            "configurable": {
+                "thread_id" : "1"  # Change later
+            }
+        }
         # Form input
         messages = [{"role": "user", "content": query}]
         # Invoke the graph as a stream
         return self._app.stream(
-            {"messages": messages}, stream_mode=["messages"], version="v2"
+            {"messages": messages},
+            config=config,
+            stream_mode=["messages"],
+            version="v2"
         )
 
     def run_agent_streamlit(self, query):
