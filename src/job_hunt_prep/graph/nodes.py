@@ -73,7 +73,8 @@ def scrap_job_posting(state: JobPrepState) -> JobPrepState:
     serialized = "\n\n".join(
         (
             f"Source: {doc.metadata.get('source', 'Unknown')}"
-            + f"\n\nContent: {doc.metadata.get('description')}"  # Specific to SeleniumURLLoader
+            f"\n\nTitle: {doc.metadata.get('title', 'Unknown')}"
+            + f"\n\nContent: {doc.page_content}"  # Specific to SeleniumURLLoader
         )
         for doc in retrieved_post
     )

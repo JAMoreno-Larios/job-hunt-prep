@@ -30,6 +30,19 @@ What's the best way to answer?
             # MessagesStreamPart — (message_chunk, metadata) from LLM calls
             msg, metadata = part["data"]
             print(msg.content, end="", flush=True)
+    
+    user_query = """
+This is the job post:https://recruiting2.ultipro.com/INF1019IRINC/JobBoard/17a8d008-9efe-4e51-8460-47ee205d5229/OpportunityDetail?opportunityId=70528dc0-415e-4c8d-970f-46cf2a253bd0
+They are asking: What are your three main motivators for this position?
+
+What's the best way to answer?
+    """.strip()
+
+    for part in graph.run_agent(user_query):
+        if part["type"] == "messages":
+            # MessagesStreamPart — (message_chunk, metadata) from LLM calls
+            msg, metadata = part["data"]
+            print(msg.content, end="", flush=True)
 
 if __name__ == "__main__":
     main()

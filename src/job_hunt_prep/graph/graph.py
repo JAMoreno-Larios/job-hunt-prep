@@ -11,6 +11,8 @@ from . import nodes
 from typing import Any, Iterator
 from .state import InputState, JobPrepState, OutputState
 from langgraph.graph import StateGraph, START, END
+from langgraph.cache.memory import InMemoryCache
+from langgraph.types import CachePolicy
 
 
 class Graph:
@@ -24,7 +26,8 @@ class Graph:
 
         # Add nodes
         workflow.add_node("process_user_input", nodes.process_user_input)
-        workflow.add_node("scrap_job_posting", nodes.scrap_job_posting)
+        workflow.add_node("scrap_job_posting", nodes.scrap_job_posting,
+                          cache_policy=CachePolicy())
         workflow.add_node("distill_query", nodes.distill_search_query)
         workflow.add_node("search_user_data", nodes.search_user_db)
         workflow.add_node("draft_answer", nodes.draft_answer)
@@ -38,7 +41,7 @@ class Graph:
         workflow.add_edge("draft_answer", END)
 
         # Compile the graph
-        self._app = workflow.compile()
+        self._app = workflow.compile(cache=InMemoryCache())
 
     @property
     def get_graph(self):
