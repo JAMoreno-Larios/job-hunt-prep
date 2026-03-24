@@ -42,6 +42,12 @@ class BaseLLMConfig(ABC):
         """
         pass
     
+
+
+class BaseRetrieverConfig(ABC):
+    """
+    Base contract for any retriever LLM setup
+    """
     @property
     @abstractmethod
     def retriever(self) -> VectorStoreRetriever:
@@ -62,22 +68,25 @@ class LLM(BaseLLMConfig):
                                reasoning=REASONING,
                                num_gpu=NUM_GPU,
                                num_thread=NUM_THREADS)
-        self._embeddings = OllamaEmbeddings(model=EMBEDDINGS_MODEL)
-        self._vector_store = Chroma(persist_directory=str(vector_store_path),
-                      embedding_function=self._embeddings)
-
-
-        # Retrieve documents above certail score.
-        # self._retriever = self._vector_store.as_retriever(
-        #     search_type="similarity_score_threshold",
-        #     search_kwargs={"score_threshold": 0.6}
-        # )
-        self._retriever = self._vector_store.as_retriever()
 
     @property
     def llm(self) -> ChatOllama:
         return self._llm
     
+
+
+class Retriever(BaseRetrieverConfig):
+
+    """
+    Service class to set up all LLM-related parameters.
+    """
+    def __init__(self) -> None:
+        self._embeddings = OllamaEmbeddings(model=EMBEDDINGS_MODEL)
+        self._vector_store = Chroma(persist_directory=str(vector_store_path),
+                      embedding_function=self._embeddings)
+
+        self._retriever = self._vector_store.as_retriever()
+
     @property
     def retriever(self) -> VectorStoreRetriever:
         return self._retriever
