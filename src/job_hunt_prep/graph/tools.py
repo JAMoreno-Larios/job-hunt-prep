@@ -110,3 +110,36 @@ def scrap_job_posting(runtime: ToolRuntime) -> Command:
             ]
         }
     )
+
+@tool
+def get_job_post_url(runtime: ToolRuntime) -> str:
+    """
+    Returns the job_post_url value from our state.
+
+    Returns:
+        job_post_url: URL related to a job post
+    """
+    return runtime.state["job_post_url"]
+
+
+@tool
+def get_job_question(runtime: ToolRuntime) -> str:
+    """
+    Returns the user_query value that contains 
+    a job interview question from our state.
+
+    Returns:
+        user_query: Job interview question or query
+    """
+    return runtime.state["user_query"]
+
+@tool
+def get_user_instructions(runtime: ToolRuntime) -> str:
+    """
+    Returns the user_instructions value that contains 
+    additional formatting instructions.
+
+    Returns:
+        user_instructions: Additional prompt formatting instructions
+    """
+    return runtime.state["user_instructions"]

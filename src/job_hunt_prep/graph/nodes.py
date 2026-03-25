@@ -43,12 +43,14 @@ def process_user_input(state: InputState) -> JobPrepState:
 
     user_query = response["user_query"]
     job_post_url = response["job_post_url"]
+    user_instructions = response["user_instructions"]
 
     # Now we use can use the refined query to extract user information.
     return {
         "raw_query": raw_query,
         "user_query": user_query,
         "job_post_url": job_post_url,
+        "user_instructions": user_instructions,
     }
 
 
@@ -143,4 +145,8 @@ def draft_answer(state: JobPrepState) -> OutputState:
 
 ## TOOL NODE
 
-tool_node = ToolNode([tools.scrap_job_posting, tools.search_user_db])
+tool_node = ToolNode([tools.scrap_job_posting,
+                      tools.search_user_db,
+                      tools.get_job_post_url,
+                      tools.get_job_question,
+                      tools.get_user_instructions])
