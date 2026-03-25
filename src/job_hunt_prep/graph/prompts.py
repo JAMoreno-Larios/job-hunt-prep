@@ -17,8 +17,13 @@ raw_query = ChatPromptTemplate(
         ("system", 
          """
 You are a Human Resources expert.
-The user will provide a query containing a job interview query and
-the related job post URL.
+The user will provide a job interview query, the job post URL,
+and further instructions regarding formatting of the answer.
+
+You have the following tools:
+- get_job_post
+- get_job_question
+- get_user_instructions
 
 ### USER RAW QUERY
 -------------
@@ -26,7 +31,9 @@ the related job post URL.
 -------------
 ### END USER RAW QUERY
 
-Identify the job_post_url and user_query from the input.
+Identify the job_post_url, user_query, and user_instructions from the input.
+If any of them are not provided, you can get them from the provided
+tools.
 Write it as a valid JSON.
 
          """.strip()),
