@@ -28,9 +28,9 @@ class JobPrepState(MessagesState):
     raw_query: str
     
     # Parsed query
-    user_query: str
+    user_query: str | None
     user_instructions: str | None
-    job_post_url: str
+    job_post_url: str | None
 
     # Raw search results
     retrieved_documents: list[Document] | None  # Raw docs
