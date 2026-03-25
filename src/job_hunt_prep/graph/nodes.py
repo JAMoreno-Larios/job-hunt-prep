@@ -6,12 +6,13 @@ J. A. Moreno
 
 from logging import exception
 
+from langgraph.prebuilt import ToolNode
 from pydantic import json_schema
 from .state import InputState, OutputState, JobPrepState
 from dotenv import load_dotenv
 from langchain_community.document_loaders import SeleniumURLLoader
 
-from . import llm_setup, prompts
+from . import llm_setup, prompts, tools
 
 # Load environment variables
 load_dotenv()
@@ -30,7 +31,6 @@ def process_user_input(state: InputState) -> JobPrepState:
     # Format the propt to obtain the user query and
     # job post URL
     raw_query = state["messages"][-1].content
-    breakpoint()
 
     formatted_prompt = prompts.raw_query.format(raw_query=raw_query)
 
@@ -141,5 +141,6 @@ def draft_answer(state: JobPrepState) -> OutputState:
     return {"draft_response": response}
 
 
-def draft_evaluator(state: JobPrepState) -> JobPrepState:
-    """User evaluates the draft"""
+## TOOL NODE
+
+tool_node = ToolNode([tools.scrap_job_posting, tools.search_user_db])
