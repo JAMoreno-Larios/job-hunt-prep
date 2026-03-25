@@ -6,6 +6,7 @@ J. A. Moreno
 
 from logging import exception
 
+from langgraph.graph.state import RunnableConfig
 from langgraph.prebuilt import ToolNode
 from pydantic import json_schema
 from .state import InputState, OutputState, JobPrepState
@@ -24,7 +25,8 @@ llm = llm_setup.LLM()
 ## USER INPUT PROCESSING NODES
 
 
-def process_user_input(state: InputState) -> JobPrepState:
+def process_user_input(state: JobPrepState,
+                       config: RunnableConfig) -> JobPrepState:
     """
     Extracts the user query and job post from the user input.
     """
@@ -32,18 +34,24 @@ def process_user_input(state: InputState) -> JobPrepState:
     # job post URL
     raw_query = state["messages"][-1].content
 
-    formatted_prompt = prompts.raw_query.format(raw_query=raw_query)
+    # formatted_prompt = prompts.raw_query.format(raw_query=raw_query)
+    formatted_prompt = prompts.raw_query.invoke({"raw_query": raw_query})
 
-    response = llm.llm.with_structured_output(
+    llm_with_tools = llm.llm.bind_tools(
+        [tools.get_job_post_url, tools.get_job_question, tools.get_user_instructions]
+    )
+
+    response = llm_with_tools.with_structured_output(
         prompts.ProcessUserInputSchema,
         strict=True,
         method="json_schema",
-        include_raw=False,
-    ).invoke(formatted_prompt)
+        include_raw=True,
+    ).invoke(state["messages"] + formatted_prompt.to_messages())
 
-    user_query = response["user_query"]
-    job_post_url = response["job_post_url"]
-    user_instructions = response["user_instructions"]
+    user_query = response["parsed"]["user_query"]
+    job_post_url = response["parsed"]["job_post_url"]
+    user_instructions = response["parsed"]["user_instructions"]
+    messages = response["raw"]
 
     # Now we use can use the refined query to extract user information.
     return {
@@ -51,10 +59,12 @@ def process_user_input(state: InputState) -> JobPrepState:
         "user_query": user_query,
         "job_post_url": job_post_url,
         "user_instructions": user_instructions,
+        "messages": messages,
     }
 
 
 ### DATA NODES
+
 
 # Scrap the job posting URL
 def scrap_job_posting(state: JobPrepState) -> JobPrepState:
@@ -133,6 +143,7 @@ def search_user_db(state: JobPrepState) -> JobPrepState:
 
 ## ANSWER GENERATION NODES
 
+
 def draft_answer(state: JobPrepState) -> OutputState:
     formatted_prompt = prompts.draft_answer.format(
         job_post=state["serialized_job_post"],
@@ -143,10 +154,28 @@ def draft_answer(state: JobPrepState) -> OutputState:
     return {"draft_response": response}
 
 
-## TOOL NODE
+## TOOL NODES
 
-tool_node = ToolNode([tools.scrap_job_posting,
-                      tools.search_user_db,
-                      tools.get_job_post_url,
-                      tools.get_job_question,
-                      tools.get_user_instructions])
+missing_information_tools = ToolNode(
+    [tools.get_job_post_url, tools.get_job_question, tools.get_user_instructions]
+)
+
+url_scrap_tool = ToolNode(
+    [
+        tools.scrap_job_posting,
+        tools.search_user_db,
+        tools.get_job_post_url,
+        tools.get_job_question,
+        tools.get_user_instructions,
+    ]
+)
+
+url_scrap_tool = ToolNode(
+    [
+        tools.scrap_job_posting,
+        tools.search_user_db,
+        tools.get_job_post_url,
+        tools.get_job_question,
+        tools.get_user_instructions,
+    ]
+)
