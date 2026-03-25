@@ -25,8 +25,7 @@ llm = llm_setup.LLM()
 ## USER INPUT PROCESSING NODES
 
 
-def process_user_input(state: JobPrepState,
-                       config: RunnableConfig) -> JobPrepState:
+def process_user_input(state: JobPrepState) -> JobPrepState:
     """
     Extracts the user query and job post from the user input.
     """
@@ -37,11 +36,7 @@ def process_user_input(state: JobPrepState,
     # formatted_prompt = prompts.raw_query.format(raw_query=raw_query)
     formatted_prompt = prompts.raw_query.invoke({"raw_query": raw_query})
 
-    llm_with_tools = llm.llm.bind_tools(
-        [tools.get_job_post_url, tools.get_job_question, tools.get_user_instructions]
-    )
-
-    response = llm_with_tools.with_structured_output(
+    response = llm.llm.with_structured_output(
         prompts.ProcessUserInputSchema,
         strict=True,
         method="json_schema",

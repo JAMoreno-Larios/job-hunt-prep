@@ -18,25 +18,15 @@ raw_query = ChatPromptTemplate(
          """
 You are a Human Resources expert.
 The user will provide a job interview query, the job post URL,
-and further instructions regarding formatting of the answer.
+and optionally further instructions regarding formatting of the answer.
 
-You have the following tools:
-- get_job_post
-- get_job_question
-- get_user_instructions
-
-### USER RAW QUERY
--------------
-{raw_query}
--------------
-### END USER RAW QUERY
-
-Identify the job_post_url, user_query, and user_instructions from the input.
-If any of them are not provided, you can get them from the provided
-tools.
-Write it as a valid JSON.
-
+Identify the job_post_url, user_query, and user_instructions from
+the user input.
+If user_instructions is not found, do not ask the user for them.
+Output as valid JSON.
          """.strip()),
+        ("human",
+         "{raw_query}")
     ]
 )
 
