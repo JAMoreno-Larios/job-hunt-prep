@@ -1,22 +1,25 @@
 """
-frontend.py
+main.py
 
-Here we implement a simple page using Streamlit
+This will be the main entry point for the assitant.
+Here we will declare all the UI logic with
+Streamlit, and take care of initiating the agent 
+within the backend package.
+
+UI is based on
+https://github.com/streamlit/demo-ai-assistant/blob/main/streamlit_app.py
 
 J. A. Moreno
 2026
 """
 
-from streamlit.runtime.state import session_state
-from graph import Graph
+import datetime
+import time
 import streamlit as st
 from dotenv import load_dotenv
-from typing import Optional, Set
-import hashlib
-from io import BytesIO
-import requests
-from PIL import Image
-
+from htbuilder import div, styles
+from htbuilder.units import em
+from graph import Agent, LLM, Retriever
 
 # Load environmental variables
 load_dotenv()
@@ -29,101 +32,133 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
+# Define a few constants
+MIN_TIME_BETWEEN_REQUESTS = datetime.timedelta(seconds=5)
 
-def create_sources_string(source_urls: Set[str]) -> str:
-    if not source_urls:
-        return ""
-    sources_list = list(source_urls)
-    sources_list.sort()
-    sources_string = "sources:\n"
-    for i, source in enumerate(sources_list):
-        sources_string += f"{i + 1}. {source}\n"
-    return sources_string
+# Initialize the agent
+agent = Agent(llm=LLM().llm, retriever=Retriever().retriever)
 
+# Disclaimer
+@st.dialog("Disclaimer")
+def show_disclaimer_dialog():
+    st.caption("""
+            This AI chatbot is powered by the configured LLMs
+            (in this version, Qwen3.5:9B), and the ingested user information.
+            Answers may be inaccurate, inefficient, or biased.
+            Any use or decisions based on such answers should include reasonable
+            practices including human oversight to ensure they are safe,
+            accurate, and suitable for your intended purpose. 
+            This chatbot may fail to scrap the provided job post, or 
+            to retrieve relevant information from the user database.
 
-# Can fetch a gravatar
-@st.cache_data(show_spinner=False, ttl=60 * 60 * 24)
-def get_profile_picture(email: str) -> Optional[Image.Image]:
-    """Fetch a small avatar with strict timeouts so UI never blocks."""
-    email_norm = (email or "").strip().lower().encode("utf-8")
-    email_md5 = hashlib.md5(email_norm).hexdigest()
-    gravatar_url = f"https://www.gravatar.com/avatar/{email_md5}?d=identicon&s=200"
-    try:
-        response = requests.get(
-            gravatar_url,
-            timeout=(2.0, 4.0),  # (connect, read)
-            headers={"User-Agent": "documentation-helper/1.0"},
-        )
-        response.raise_for_status()
-        return Image.open(BytesIO(response.content))
-    except Exception:
-        return None
+            This software is provided as is.
+        """)
 
+# Draw the UI
 
-# Custom CSS for dark theme and modern look
-st.markdown(
-    """
-<style>
-    .stApp {
-        background-color: #1E1E1E;
-        color: #FFFFFF;
-    }
-    .stTextInput > div > div > input {
-        background-color: #2D2D2D;
-        color: #FFFFFF;
-    }
-    .stButton > button {
-        background-color: #4CAF50;
-        color: #FFFFFF;
-    }
-    .stSidebar {
-        background-color: #252526;
-    }
-    .stMessage {
-        background-color: #2D2D2D;
-    }
-</style>
-""",
-    unsafe_allow_html=True,
+st.html(div(style=styles(font_size=em(5), line_height=1))["❉"])
+
+title_row = st.container(
+    horizontal=True,
+    vertical_alignment="bottom"
 )
 
-# Set page config at the very beginning
+with title_row:
+    st.title(
+        "Job Prep AI assistant",
+        anchor=False,
+        width="stretch",
+    )
 
-# Sidebar user information
-with st.sidebar:
-    st.title("User Profile")
+# Define what to do when we start
+user_just_asked_initial_question = (
+    "initial_question" in st.session_state and st.session_state.initial_question
+)
 
-    # You can replace these with actual user data
-    user_name = "John Doe"
-    user_email = "john.doe@example.com"
+has_message_history = (
+    "messages" in st.session_state and len(st.session_state.messages) > 0
+)
 
-    profile_pic = get_profile_picture(user_email)
-    if profile_pic is not None:
-        st.image(profile_pic, width=150)
-    st.write(f"**Name:** {user_name}")
-    st.write(f"**Email:** {user_email}")
+# Show a different UI when the user has not asked anything yet
+if not user_just_asked_initial_question and not has_message_history:
+    st.session_state.messages = []
 
-st.header("Job Hunt Preparation Helper Bot")
+    with st.container():
+        st.chat_input("Ask a question...", key="initial_question")
 
-# Initialize session state
-if "chat_answers_history" not in st.session_state:
-    st.session_state["chat_answers_history"] = []
-    st.session_state["user_prompt_history"] = []
-    st.session_state["chat_history"] = []
+    st.button(
+        "&nbsp;:small[:gray[:material/balance: Disclaimer]]",
+        type="tertiary",
+        on_click=show_disclaimer_dialog,
+    )
 
-# Use a form to prevent reruns until submission
-with st.form(key="chat_form"):
-    prompt = st.text_input("Prompt", placeholder="Enter your message here...")
-    submit_clicked = st.form_submit_button("Submit")
+    st.stop()
 
-if submit_clicked and prompt:
+# Define the rest of the UI
+# Show chat input at the bottom when a question has been asked.
+user_message = st.chat_input("Ask a follow-up...")
 
-    graph = Graph()
-    st.session_state["chat_history"].append(("human", prompt))
-    st.chat_message("user").write(prompt)
-    st.chat_message("ai").write_stream(graph.run_agent_streamlit(prompt))
+if not user_message:
+    if user_just_asked_initial_question:
+        user_message = st.session_state.initial_question
 
+with title_row:
 
-# Add a footer
-st.markdown("---")
-st.markdown("Powered by LangChain and Streamlit")
+    def clear_conversation():
+        st.session_state.messages = []
+        st.session_state.initial_question = None
+
+    st.button(
+        "Restart",
+        icon=":material/refresh:",
+        on_click=clear_conversation,
+    )
+
+if "prev_question_timestamp" not in st.session_state:
+    st.session_state.prev_question_timestamp = datetime.datetime.fromtimestamp(0)
+
+# Display chat messages from history as speech bubbles.
+for i, message in enumerate(st.session_state.messages):
+    with st.chat_message(message["role"]):
+        if message["role"] == "assistant":
+            st.container()  # Fix ghost message bug.
+
+        st.markdown(message["content"])
+
+if user_message:
+    # When the user posts a message...
+
+    # Streamlit's Markdown engine interprets "$" as LaTeX code (used to
+    # display math). The line below fixes it.
+    user_message = user_message.replace("$", r"\$")
+
+    # Display message as a speech bubble.
+    with st.chat_message("user"):
+        st.text(user_message)
+
+    # Display assistant response as a speech bubble.
+    with st.chat_message("assistant"):
+        with st.spinner("Waiting..."):
+            # Rate-limit the input if needed.
+            question_timestamp = datetime.datetime.now()
+            time_diff = question_timestamp - st.session_state.prev_question_timestamp
+            st.session_state.prev_question_timestamp = question_timestamp
+
+            if time_diff < MIN_TIME_BETWEEN_REQUESTS:
+                time.sleep(time_diff.seconds + time_diff.microseconds * 0.001)
+
+            user_message = user_message.replace("'", "")
+
+        # Send prompt to LLM.
+        with st.spinner("Thinking..."):
+            response_gen = agent.run_agent(user_message)
+
+        # Put everything after the spinners in a container to fix the
+        # ghost message bug.
+        with st.container():
+            # Stream the LLM response.
+            response = st.write_stream(response_gen)
+
+            # Add messages to chat history.
+            st.session_state.messages.append({"role": "user", "content": user_message})
+            st.session_state.messages.append({"role": "assistant", "content": response})
