@@ -1,70 +1,57 @@
-""" graph.py
+""" agent.py
 
-Here we wire all our nodes into a graph
+Here we define our agent, we provide tools and middleware
 
 J. A. Moreno
 2026
 """
 
+from langchain.chat_models import BaseChatModel
+from langchain.tools import tool
+from langchain_core.retrievers import BaseRetriever
 from langgraph.graph.state import RunnableConfig
-from langgraph.prebuilt import tools_condition
-from . import nodes
 from typing import Any, Iterator
-from .state import InputState, JobPrepState, OutputState
-from langgraph.graph import StateGraph, START, END
-from langgraph.cache.memory import InMemoryCache
 from langgraph.checkpoint.memory import InMemorySaver
-from langgraph.types import CachePolicy
 
+from langchain.agents import create_agent
+from langchain.agents.middleware import (TodoListMiddleware,
+    SummarizationMiddleware)
+
+from . import prompts
+from .tools import Tools
+from .state import JobPrepState
 
 checkpointer = InMemorySaver()
 
+class Agent:
 
-class Graph:
-    def __init__(self) -> None:
+    def __init__(self, llm: BaseChatModel, retriever: BaseRetriever) -> None:
         """
-        Creates the graph when called.
+        Initialize class. Inject LLM and Retriever to be used
         """
-        workflow = StateGraph(
-            JobPrepState, input_schema=InputState
+        self._llm = llm
+        self._retriever = retriever
+        self._Tools = Tools(retriever)
+
+        # Register tools
+        tools = [
+            tool(self._Tools.scrap_job_posting),
+            tool(self._Tools.search_user_db),
+        ]
+
+        # Create agent
+        self._app = create_agent(
+            model=self._llm,
+            tools=tools,
+            middleware=[
+                TodoListMiddleware(),
+                SummarizationMiddleware(model=self._llm)
+            ],
+            checkpointer=InMemorySaver(),
+            system_prompt=prompts.agent_prompt,
+            state_schema=JobPrepState
         )
-        # workflow = StateGraph(
-        #     JobPrepState, input_schema=InputState, output_schema=OutputState
-        # )
 
-        # Add nodes
-        workflow.add_node("process_user_input", nodes.process_user_input)
-        workflow.add_node("scrap_job_posting", nodes.scrap_job_posting,
-                          cache_policy=CachePolicy())
-        workflow.add_node("distill_query", nodes.distill_search_query)
-        workflow.add_node("search_user_data", nodes.search_user_db)
-        workflow.add_node("draft_answer", nodes.draft_answer)
-
-        # Declare edges
-        workflow.add_edge(START, "process_user_input")
-        workflow.add_edge("process_user_input", "scrap_job_posting")
-        workflow.add_edge("scrap_job_posting", "distill_query")
-        workflow.add_edge("distill_query", "search_user_data")
-        workflow.add_edge("search_user_data", "draft_answer")
-        workflow.add_edge("draft_answer", END)
-
-        # Decide whether to use tools or continue
-        # workflow.add_conditional_edges(
-        #     "process_user_input",
-        #     # Assess LLM decision
-        #     tools_condition,
-        #     {
-        #         # Translate the condition outputs to nodes in our graph
-        #         "tools": "input_tools",
-        #         END: END
-        #     }
-        # )
-
-
-
-        # Compile the graph
-        self._app = workflow.compile(cache=InMemoryCache(),
-                                     checkpointer=checkpointer)
 
     @property
     def get_graph(self):

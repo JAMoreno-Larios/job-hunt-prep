@@ -7,9 +7,10 @@ J. A. Moreno
 2026
 """
 
-from langchain.tools import tool, ToolRuntime
+from langchain.tools import ToolRuntime
 from langchain_community.document_loaders import SeleniumURLLoader
 from langchain.messages import ToolMessage
+from langchain_core.retrievers import BaseRetriever
 from langgraph.types import Command
 
 from . import llm_setup
@@ -17,129 +18,104 @@ from . import llm_setup
 # Initialize retriever
 retriever = llm_setup.Retriever().retriever
 
-# Define tools
-@tool
-def search_user_db(runtime: ToolRuntime) -> Command:
-    """
-    Semantically searches a vector store containing user's personal information
-    matching the query.
 
-    Sets:
-        serialized_documents: Serialized documents from the vector store
-        retrieved_documents: Retrieved Documents from the vector store
-    """
+class Tools:
 
-    query = runtime.state["distilled_query"]
-    try:
-        retrieved_docs = retriever.invoke(str(query), k=5)
-        # Serialize documents for the model
+    def __init__(self, retriever: BaseRetriever) -> None:
+        self._retriever = retriever
+
+# Define tools - Register them with the tool function
+    def search_user_db(self, query: str, runtime: ToolRuntime) -> Command:
+        """
+        Semantically searches a vector store containing user's personal information
+        matching the query.
+
+        Sets:
+            serialized_documents: Serialized documents from the vector store
+            retrieved_documents: Retrieved Documents from the vector store
+        """
+
+        # query = runtime.state["distilled_query"]
+        try:
+            retrieved_docs = self._retriever.invoke(str(query), k=5)
+            # Serialize documents for the model
+            serialized = "\n\n".join(
+                (
+                    f"Source: {doc.metadata.get('source', 'Unknown')}"
+                    + f"\n\nContent: {doc.page_content}"
+                )
+                for doc in retrieved_docs
+            )
+            # Return serialized and raw documents
+            return Command(
+                    update={
+                        "serialized_documents": serialized,
+                        "retrieved_documents": retrieved_docs,
+                        "messages": [
+                        ToolMessage(
+                            content="Retrieved docs!\n",
+                            tool_call_id=runtime.tool_call_id
+                        )
+                        ]
+                    }
+            )
+
+        except Exception:
+            Exception("Search turned no elemments")
+            return Command(
+                    update={
+                        "serialized_documents": None,
+                        "retrieved_documents": None,
+                        "messages": [
+                        ToolMessage(
+                            content="Failed to retrieve docs",
+                            tool_call_id=runtime.tool_call_id
+                        )
+                        ]
+                    }
+            )
+
+
+    def scrap_job_posting(self, job_post_url: str, runtime: ToolRuntime) -> Command:
+        """
+        Scraps the job post located in job_post_url and loads
+        as a list of Documents using SeleniumURLLoader.
+
+        Arguments:
+            - job_post_url: The URL to scrap
+        
+        Sets the state as follows:
+            job_post_url: The scrapped URL
+            serialized_job_post: Serialized documents from the job post
+            job_post_documents: Retrieved Documents from the job post
+
+        """
+        # Create the url loader
+        loader = SeleniumURLLoader(
+            [job_post_url],
+        )
+        # Load data
+        retrieved_post = loader.load()
+        # Serialize
         serialized = "\n\n".join(
             (
                 f"Source: {doc.metadata.get('source', 'Unknown')}"
-                + f"\n\nContent: {doc.page_content}"
+                f"\n\nTitle: {doc.metadata.get('title', 'Unknown')}"
+                + f"\n\nContent: {doc.page_content}"  # Specific to SeleniumURLLoader
             )
-            for doc in retrieved_docs
+            for doc in retrieved_post
         )
-        # Return serialized and raw documents
+        # Return serialized and raw docs
         return Command(
-                update={
-                    "serialized_documents": serialized,
-                    "retrieved_documents": retrieved_docs,
-                    "messages": [
+            update={
+                "job_post_url": job_post_url,
+                "serialized_job_post": serialized,
+                "job_post_documents": retrieved_post,
+                "messages": [
                     ToolMessage(
-                        content="Retrieved docs!",
+                        content="Retrieved job post.\n",
                         tool_call_id=runtime.tool_call_id
                     )
-                    ]
-                }
+                ]
+            }
         )
-
-    except Exception:
-        Exception("Search turned no elemments")
-        return Command(
-                update={
-                    "serialized_documents": None,
-                    "retrieved_documents": None,
-                    "messages": [
-                    ToolMessage(
-                        content="Failed to retrieve docs",
-                        tool_call_id=runtime.tool_call_id
-                    )
-                    ]
-                }
-        )
-
-
-@tool
-def scrap_job_posting(runtime: ToolRuntime) -> Command:
-    """
-    Scraps the job post located in job_post_url and loads
-    as a list of Documents using SeleniumURLLoader.
-
-    Sets the state as follows:
-        serialized_job_post: Serialized documents from the job post
-        job_post_documents: Retrieved Documents from the job post
-
-    """
-    job_post_url = runtime.state["job_post_url"]
-    # Create the url loader
-    loader = SeleniumURLLoader(
-        [job_post_url],
-    )
-    # Load data
-    retrieved_post = loader.load()
-    # Serialize
-    serialized = "\n\n".join(
-        (
-            f"Source: {doc.metadata.get('source', 'Unknown')}"
-            f"\n\nTitle: {doc.metadata.get('title', 'Unknown')}"
-            + f"\n\nContent: {doc.page_content}"  # Specific to SeleniumURLLoader
-        )
-        for doc in retrieved_post
-    )
-    # Return serialized and raw docs
-    return Command(
-        update={
-        "serialized_job_post": serialized,
-        "job_post_documents": retrieved_post,
-        "messages": [
-            ToolMessage(
-                    content="Failed to retrieve docs",
-                    tool_call_id=runtime.tool_call_id
-                )
-            ]
-        }
-    )
-
-@tool
-def get_job_post_url(runtime: ToolRuntime) -> str:
-    """
-    Returns the job_post_url value from our state.
-
-    Returns:
-        job_post_url: URL related to a job post
-    """
-    return runtime.state["job_post_url"]
-
-
-@tool
-def get_job_question(runtime: ToolRuntime) -> str:
-    """
-    Returns the user_query value that contains 
-    a job interview question from our state.
-
-    Returns:
-        user_query: Job interview question or query
-    """
-    return runtime.state["user_query"]
-
-@tool
-def get_user_instructions(runtime: ToolRuntime) -> str:
-    """
-    Returns the user_instructions value that contains 
-    additional formatting instructions.
-
-    Returns:
-        user_instructions: Additional prompt formatting instructions
-    """
-    return runtime.state["user_instructions"]
