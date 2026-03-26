@@ -6,6 +6,8 @@ J. A. Moreno
 2026
 """
 
+from langgraph.graph.state import RunnableConfig
+from langgraph.prebuilt import tools_condition
 from . import nodes
 from typing import Any, Iterator
 from .state import InputState, JobPrepState, OutputState
@@ -24,24 +26,42 @@ class Graph:
         Creates the graph when called.
         """
         workflow = StateGraph(
-            JobPrepState, input_schema=InputState, output_schema=OutputState
+            JobPrepState, input_schema=InputState
         )
+        # workflow = StateGraph(
+        #     JobPrepState, input_schema=InputState, output_schema=OutputState
+        # )
 
         # Add nodes
         workflow.add_node("process_user_input", nodes.process_user_input)
         workflow.add_node("scrap_job_posting", nodes.scrap_job_posting,
                           cache_policy=CachePolicy())
-        workflow.add_node("distill_query", nodes.distill_search_query)
-        workflow.add_node("search_user_data", nodes.search_user_db)
-        workflow.add_node("draft_answer", nodes.draft_answer)
+        # workflow.add_node("distill_query", nodes.distill_search_query)
+        # workflow.add_node("search_user_data", nodes.search_user_db)
+        # workflow.add_node("draft_answer", nodes.draft_answer)
 
         # Declare edges
         workflow.add_edge(START, "process_user_input")
         workflow.add_edge("process_user_input", "scrap_job_posting")
-        workflow.add_edge("scrap_job_posting", "distill_query")
-        workflow.add_edge("distill_query", "search_user_data")
-        workflow.add_edge("search_user_data", "draft_answer")
-        workflow.add_edge("draft_answer", END)
+        workflow.add_edge("scrap_job_posting", END)
+
+        # Decide whether to use tools or continue
+        # workflow.add_conditional_edges(
+        #     "process_user_input",
+        #     # Assess LLM decision
+        #     tools_condition,
+        #     {
+        #         # Translate the condition outputs to nodes in our graph
+        #         "tools": "input_tools",
+        #         END: END
+        #     }
+        # )
+
+
+        # workflow.add_edge("scrap_job_posting", "distill_query")
+        # workflow.add_edge("distill_query", "search_user_data")
+        # workflow.add_edge("search_user_data", "draft_answer")
+        # workflow.add_edge("draft_answer", END)
 
         # Compile the graph
         self._app = workflow.compile(cache=InMemoryCache(),
@@ -60,18 +80,18 @@ class Graph:
         """
     
     # Define configuration
-        config = {
+        config = RunnableConfig({
             "configurable": {
                 "thread_id" : "1"  # Change later
             }
-        }
+        })
         # Form input
         messages = [{"role": "user", "content": query}]
         # Invoke the graph as a stream
         return self._app.stream(
             {"messages": messages},
             config=config,
-            stream_mode=["messages"],
+            stream_mode=["messages", "updates"],
             version="v2"
         )
 

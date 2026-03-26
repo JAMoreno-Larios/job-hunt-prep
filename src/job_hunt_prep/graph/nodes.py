@@ -151,26 +151,14 @@ def draft_answer(state: JobPrepState) -> OutputState:
 
 ## TOOL NODES
 
-missing_information_tools = ToolNode(
-    [tools.get_job_post_url, tools.get_job_question, tools.get_user_instructions]
-)
-
 url_scrap_tool = ToolNode(
     [
         tools.scrap_job_posting,
-        tools.search_user_db,
-        tools.get_job_post_url,
-        tools.get_job_question,
-        tools.get_user_instructions,
     ]
 )
 
-url_scrap_tool = ToolNode(
+search_user_db_tool = ToolNode(
     [
-        tools.scrap_job_posting,
         tools.search_user_db,
-        tools.get_job_post_url,
-        tools.get_job_question,
-        tools.get_user_instructions,
     ]
 )
