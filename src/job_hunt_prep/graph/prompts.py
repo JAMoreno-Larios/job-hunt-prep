@@ -52,10 +52,10 @@ job interview question.
 -------------
 ### END USER QUERY
 
-Generate a semantic search query that will retrieve the information needed to
+Generate a semantic search phrase that will retrieve the information needed to
 answer the query from a vector store that contains the candidate's work
 experience (resumes, cv, publications, grant applications). Use consice
-wording that can gather as diverse information as possible.
+wording.
 Write as a valid JSON output named distill_query.
          """.strip()),
     ]
@@ -82,6 +82,12 @@ and a user query that is a job interview question.
 -------------
 
 ### END USER INFO
+
+### USER INSTRUCTIONS
+-------------
+{user_instructions}
+-------------
+### END USER INSTRUCTIONS
 
 ### USER QUERY
 -------------

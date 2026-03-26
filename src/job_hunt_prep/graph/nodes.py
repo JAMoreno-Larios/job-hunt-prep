@@ -21,6 +21,8 @@ load_dotenv()
 # Initialize LLM
 llm = llm_setup.LLM()
 
+# Initialize retriever
+retriever = llm_setup.Retriever()
 
 ## USER INPUT PROCESSING NODES
 
@@ -117,7 +119,7 @@ def search_user_db(state: JobPrepState) -> JobPrepState:
     """
     query = state.get("distilled_query")
     try:
-        retrieved_docs = llm.retriever.invoke(str(query), k=5)
+        retrieved_docs = retriever.retriever.invoke(str(query), k=5)
         # Serialize documents for the model
         serialized = "\n\n".join(
             (
@@ -143,6 +145,7 @@ def draft_answer(state: JobPrepState) -> OutputState:
     formatted_prompt = prompts.draft_answer.format(
         job_post=state["serialized_job_post"],
         user_info=state["serialized_documents"],
+        user_instructions=state["user_instructions"],
         user_query=state["user_query"],
     )
     response = llm.llm.invoke(formatted_prompt)
