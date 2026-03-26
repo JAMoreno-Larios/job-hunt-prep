@@ -35,7 +35,6 @@ class Tools:
             retrieved_documents: Retrieved Documents from the vector store
         """
 
-        # query = runtime.state["distilled_query"]
         try:
             retrieved_docs = self._retriever.invoke(str(query), k=5)
             # Serialize documents for the model
@@ -53,7 +52,7 @@ class Tools:
                         "retrieved_documents": retrieved_docs,
                         "messages": [
                         ToolMessage(
-                            content="Retrieved docs!\n",
+                            content=serialized,
                             tool_call_id=runtime.tool_call_id
                         )
                         ]
@@ -113,7 +112,7 @@ class Tools:
                 "job_post_documents": retrieved_post,
                 "messages": [
                     ToolMessage(
-                        content="Retrieved job post.\n",
+                        content=serialized,
                         tool_call_id=runtime.tool_call_id
                     )
                 ]
