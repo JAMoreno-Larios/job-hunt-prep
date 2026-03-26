@@ -36,14 +36,17 @@ class Graph:
         workflow.add_node("process_user_input", nodes.process_user_input)
         workflow.add_node("scrap_job_posting", nodes.scrap_job_posting,
                           cache_policy=CachePolicy())
-        # workflow.add_node("distill_query", nodes.distill_search_query)
-        # workflow.add_node("search_user_data", nodes.search_user_db)
-        # workflow.add_node("draft_answer", nodes.draft_answer)
+        workflow.add_node("distill_query", nodes.distill_search_query)
+        workflow.add_node("search_user_data", nodes.search_user_db)
+        workflow.add_node("draft_answer", nodes.draft_answer)
 
         # Declare edges
         workflow.add_edge(START, "process_user_input")
         workflow.add_edge("process_user_input", "scrap_job_posting")
-        workflow.add_edge("scrap_job_posting", END)
+        workflow.add_edge("scrap_job_posting", "distill_query")
+        workflow.add_edge("distill_query", "search_user_data")
+        workflow.add_edge("search_user_data", "draft_answer")
+        workflow.add_edge("draft_answer", END)
 
         # Decide whether to use tools or continue
         # workflow.add_conditional_edges(
@@ -58,10 +61,6 @@ class Graph:
         # )
 
 
-        # workflow.add_edge("scrap_job_posting", "distill_query")
-        # workflow.add_edge("distill_query", "search_user_data")
-        # workflow.add_edge("search_user_data", "draft_answer")
-        # workflow.add_edge("draft_answer", END)
 
         # Compile the graph
         self._app = workflow.compile(cache=InMemoryCache(),
