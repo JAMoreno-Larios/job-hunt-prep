@@ -7,10 +7,11 @@ J. A. Moreno
 2026
 """
 
-from graph import Graph
+from .agent import Agent
+from .llm_setup import LLM, Retriever
 
 def main():
-    print("Testing our graph")
+    print("Testing our agent\n")
 
     user_query = """
 This is the job post:https://recruiting2.ultipro.com/INF1019IRINC/JobBoard/17a8d008-9efe-4e51-8460-47ee205d5229/OpportunityDetail?opportunityId=70528dc0-415e-4c8d-970f-46cf2a253bd0
@@ -19,11 +20,12 @@ professionally passionate about AI. Please briefly explain how you have
 put it to work for you in either or both areas of your life.
     """.strip()
 
-    #Initialize graph
-    graph = Graph()
-    graph.draw_mermaid_png()
+    #Initialize agent
+
+    agent = Agent(llm=LLM().llm, retriever=Retriever().retriever)
+    agent.draw_mermaid_png()
     
-    for part in graph.run_agent(user_query):
+    for part in agent.run_agent(user_query):
         if part["type"] == "messages":
             # MessagesStreamPart — (message_chunk, metadata) from LLM calls
             msg, metadata = part["data"]
@@ -35,7 +37,7 @@ They are asking: What are your three main motivators for this position?
 Additional instructions: Keep your answer below 500 characters.
     """.strip()
 
-    for part in graph.run_agent(user_query):
+    for part in agent.run_agent(user_query):
         if part["type"] == "messages":
             # MessagesStreamPart — (message_chunk, metadata) from LLM calls
             msg, metadata = part["data"]
@@ -48,7 +50,7 @@ User insructions: Keep your answer below 250 characters, avoid technical jargon 
 no older than 5 years.
     """.strip()
 
-    for part in graph.run_agent(user_query):
+    for part in agent.run_agent(user_query):
         if part["type"] == "messages":
             # MessagesStreamPart — (message_chunk, metadata) from LLM calls
             msg, metadata = part["data"]
