@@ -21,7 +21,7 @@ The user will provide a job interview query, the job post URL,
 and optionally further instructions regarding formatting of the answer.
 
 Identify the job_post_url, user_query, and user_instructions from
-the user input.
+the user input. If not provided, use tools.
 If user_instructions is not found, do not ask the user for them.
 Output as valid JSON.
          """.strip()),
