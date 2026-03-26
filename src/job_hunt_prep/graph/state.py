@@ -6,6 +6,7 @@ J. A. Moreno
 2026
 """
 
+from langchain.agents import AgentState
 from langchain_core.documents import Document
 from langgraph.graph import MessagesState
 
@@ -23,7 +24,7 @@ class OutputState(MessagesState):
     draft_response: str | None
 
 
-class JobPrepState(MessagesState):
+class JobPrepState(AgentState):
     # Raw user query
     raw_query: str
 
