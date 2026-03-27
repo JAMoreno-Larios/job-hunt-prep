@@ -6,6 +6,8 @@ J. A. Moreno
 2026
 """
 
+import operator
+from typing import Annotated
 from langchain.agents import AgentState
 from langchain_core.documents import Document
 from langgraph.graph import MessagesState
@@ -35,7 +37,7 @@ class JobPrepState(AgentState):
 
     # Raw search results
     retrieved_documents: list[Document] | None  # Raw docs
-    serialized_documents: str | None  # Serialized content
+    serialized_documents: Annotated[str, operator.add] # Serialized content
     job_post_documents: list[Document] | None
     serialized_job_post: str | None  # From web page
 
