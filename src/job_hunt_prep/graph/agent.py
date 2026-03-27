@@ -10,7 +10,7 @@ from langchain.chat_models import BaseChatModel
 from langchain.tools import tool
 from langchain_core.retrievers import BaseRetriever
 from langgraph.graph.state import RunnableConfig
-from typing import Any, Iterator
+from typing import Any, Iterator, List
 from langgraph.checkpoint.memory import InMemorySaver
 
 from langchain.agents import create_agent
@@ -73,12 +73,6 @@ class Agent:
         Runs the agent workflow, forms the user input
         """
     
-    # Define configuration
-        config = RunnableConfig({
-            "configurable": {
-                "thread_id" : "1"  # Change later
-            }
-        })
         # Form input
         messages = [{"role": "user", "content": query}]
         # Invoke the graph
@@ -117,13 +111,14 @@ class Agent:
             version="v2"
         )
 
-    def run_agent_streamlit(self, query):
-        """
-        Runs the agent workflow, forms the user input
-        """
-        # Invoke the graph as a stream
-        for part in self.run_agent(query):
-            if part["type"] == "messages":
-                # MessagesStreamPart — (message_chunk, metadata) from LLM calls
-                msg, metadata = part["data"]
-                yield msg.content
+
+    def run_agent_streamlit(self, session_messages: List[str],
+                                config: RunnableConfig):
+            """
+            Runs the agent workflow, expect state messages 
+            """
+            # Invoke the graph
+            return self._app.invoke(
+                {"messages": session_messages},
+                config=config,
+            )
