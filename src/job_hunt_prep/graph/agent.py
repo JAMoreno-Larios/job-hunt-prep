@@ -60,7 +60,43 @@ class Agent:
     def draw_mermaid_png(self, output_file_path="workflow.png"):
         self._app.get_graph().draw_mermaid_png(output_file_path=output_file_path)
 
-    def run_agent(self, query) -> Iterator[dict[str, Any] | Any]:
+    def run_agent(self, query,
+                  config = RunnableConfig(
+                    {
+                        "configurable": {
+                        "thread_id" : "1"  # Change later
+                            }
+                        }
+                      )
+                  )-> Iterator[dict[str, Any] | Any]:
+        """
+        Runs the agent workflow, forms the user input
+        """
+    
+    # Define configuration
+        config = RunnableConfig({
+            "configurable": {
+                "thread_id" : "1"  # Change later
+            }
+        })
+        # Form input
+        messages = [{"role": "user", "content": query}]
+        # Invoke the graph
+        return self._app.invoke(
+            {"messages": messages},
+            config=config,
+        )
+
+
+    def stream_agent(self, query,
+                  config = RunnableConfig(
+                    {
+                        "configurable": {
+                        "thread_id" : "1"  # Change later
+                            }
+                        }
+                      )
+                  )-> Iterator[dict[str, Any] | Any]:
         """
         Runs the agent workflow, forms the user input
         """
