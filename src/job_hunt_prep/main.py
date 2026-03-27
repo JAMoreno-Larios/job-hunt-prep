@@ -24,6 +24,7 @@ from dotenv import load_dotenv
 from htbuilder import div, styles
 from htbuilder.units import em
 from graph import Agent, LLM, Retriever
+from util.st_callable_util import get_streamlit_cb
 
 # Load environmental variables
 load_dotenv()
@@ -144,12 +145,15 @@ if user_message:
     answer_container = st.chat_message("assistant")
     # Define the callback and config, bridging LangChain and
     # Streamlit
-    st_callback = StreamlitCallbackHandler(answer_container)
-    cfg = RunnableConfig()
+    st_callback = get_streamlit_cb(answer_container)
+    cfg = RunnableConfig(
+                    {
+                        "configurable": {
+                        "thread_id" : "1"  # Change later
+                            }
+                        }
+    )
     cfg["callbacks"] = [st_callback]
-    cfg["configurable"]: {
-            "thread_id" : "1"  # Change later
-        }
 
     with st.spinner("Waiting..."):
         # Rate-limit the input if needed.
@@ -164,10 +168,11 @@ if user_message:
 
     # Send prompt to LLM.
     with st.spinner("Thinking..."):
-        answer = agent.run_agent(user_message, cfg)
+        # Append user message to history
+        st.session_state.messages.append({"role": "user", "content": user_message})
+        answer = agent.run_agent_streamlit(st.session_state.messages, cfg)
 
     # Write output
     answer_container.write(answer['messages'][-1].content)
     # Add messages to chat history.
-    st.session_state.messages.append({"role": "user", "content": user_message})
     st.session_state.messages.append({"role": "assistant", "content": answer['messages'][-1].content})
