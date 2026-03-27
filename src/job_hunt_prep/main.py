@@ -15,7 +15,11 @@ J. A. Moreno
 
 import datetime
 import time
+from langgraph.graph.state import RunnableConfig
 import streamlit as st
+from langchain_community.callbacks.streamlit import (
+    StreamlitCallbackHandler
+)
 from dotenv import load_dotenv
 from htbuilder import div, styles
 from htbuilder.units import em
@@ -137,28 +141,33 @@ if user_message:
         st.text(user_message)
 
     # Display assistant response as a speech bubble.
-    with st.chat_message("assistant"):
-        with st.spinner("Waiting..."):
-            # Rate-limit the input if needed.
-            question_timestamp = datetime.datetime.now()
-            time_diff = question_timestamp - st.session_state.prev_question_timestamp
-            st.session_state.prev_question_timestamp = question_timestamp
+    answer_container = st.chat_message("assistant")
+    # Define the callback and config, bridging LangChain and
+    # Streamlit
+    st_callback = StreamlitCallbackHandler(answer_container)
+    cfg = RunnableConfig()
+    cfg["callbacks"] = [st_callback]
+    cfg["configurable"]: {
+            "thread_id" : "1"  # Change later
+        }
 
-            if time_diff < MIN_TIME_BETWEEN_REQUESTS:
-                time.sleep(time_diff.seconds + time_diff.microseconds * 0.001)
+    with st.spinner("Waiting..."):
+        # Rate-limit the input if needed.
+        question_timestamp = datetime.datetime.now()
+        time_diff = question_timestamp - st.session_state.prev_question_timestamp
+        st.session_state.prev_question_timestamp = question_timestamp
 
-            user_message = user_message.replace("'", "")
+        if time_diff < MIN_TIME_BETWEEN_REQUESTS:
+            time.sleep(time_diff.seconds + time_diff.microseconds * 0.001)
 
-        # Send prompt to LLM.
-        with st.spinner("Thinking..."):
-            response_gen = agent.run_agent(user_message)
+        user_message = user_message.replace("'", "")
 
-        # Put everything after the spinners in a container to fix the
-        # ghost message bug.
-        with st.container():
-            # Stream the LLM response.
-            response = st.write_stream(response_gen)
+    # Send prompt to LLM.
+    with st.spinner("Thinking..."):
+        answer = agent.run_agent(user_message, cfg)
 
-            # Add messages to chat history.
-            st.session_state.messages.append({"role": "user", "content": user_message})
-            st.session_state.messages.append({"role": "assistant", "content": response})
+    # Write output
+    answer_container.write(answer['messages'][-1].content)
+    # Add messages to chat history.
+    st.session_state.messages.append({"role": "user", "content": user_message})
+    st.session_state.messages.append({"role": "assistant", "content": answer['messages'][-1].content})
