@@ -18,4 +18,5 @@ dependencies = [
   "pyright>=1.1.408",
   "streamlit>=1.55.0",
   "selenium>=4.41.0",
+  "htbuilder>=0.9.0",
 ]
