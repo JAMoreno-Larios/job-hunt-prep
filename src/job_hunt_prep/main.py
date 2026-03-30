@@ -17,6 +17,9 @@ import datetime
 import time
 from langgraph.graph.state import RunnableConfig
 import streamlit as st
+from langchain_community.callbacks.streamlit import (
+    StreamlitCallbackHandler
+)
 from dotenv import load_dotenv
 from htbuilder import div, styles
 from htbuilder.units import em

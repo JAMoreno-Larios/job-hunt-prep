@@ -6,8 +6,10 @@ J. A. Moreno
 
 from logging import exception
 
+from langgraph.graph.state import RunnableConfig
 from langgraph.prebuilt import ToolNode
-from .state import OutputState, JobPrepState
+from pydantic import json_schema
+from .state import InputState, OutputState, JobPrepState
 from dotenv import load_dotenv
 from langchain_community.document_loaders import SeleniumURLLoader
 
