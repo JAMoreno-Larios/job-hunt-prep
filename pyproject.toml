@@ -1,9 +1,26 @@
+[build-system]
+requires = ["hatchling""]
+build-backend = "hatchling.build"
+
 [project]
 name = "job-hunt-prep"
 version = "0.1.0"
-description = "Add your description here"
+description = "AI assitant for job application questionnaires using LangChain, Streamlit, and Ollama"
 readme = "README.md"
-requires-python = "==3.11.5"
+requires-python = ">=3.11"
+license = {text = "GPL-3.0-or-later"}
+license-files = ["LICENSE"]
+authors = [
+  {name = "José Agustín Moreno-Larios" email = "jose.agustin.moreno.larios@gmail.com"}
+]
+
+classifiers = [
+  "Intended Audience :: End Users/Desktop",
+  "Programming Language :: Python :: 3.11",
+  "Operating System :: OS Independent",
+  "Development Status :: 3 - Alpha"
+]
+
 dependencies = [
   "langchain",
   "langchain-community",
@@ -19,4 +36,20 @@ dependencies = [
   "streamlit>=1.55.0",
   "selenium>=4.41.0",
   "htbuilder>=0.9.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/JAMoreno-Larios/job-hunt-prep"
+Issues = "https://github.com/JAMoreno-Larios/job-hunt-prep/issues"
+
+[project.scripts]
+job-hunt-prep = "job_hunt_prep.main:run"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/job_hunt_prep"]
+
+[tool.hatch.build.targets.sdist]
+include = [
+  "/src",
+  "/README.md",
 ]
