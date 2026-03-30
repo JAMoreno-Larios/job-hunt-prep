@@ -3,7 +3,7 @@ main.py
 
 This will be the main entry point for the assitant.
 Here we will declare all the UI logic with
-Streamlit, and take care of initiating the agent 
+Streamlit, and take care of initiating the agent
 within the backend package.
 
 UI is based on
@@ -40,6 +40,7 @@ MIN_TIME_BETWEEN_REQUESTS = datetime.timedelta(seconds=5)
 # Initialize the agent
 agent = Agent(llm=LLM().llm, retriever=Retriever().retriever)
 
+
 # Disclaimer
 @st.dialog("Disclaimer")
 def show_disclaimer_dialog():
@@ -56,14 +57,12 @@ def show_disclaimer_dialog():
             This software is provided as is.
         """)
 
+
 # Draw the UI
 
 st.html(div(style=styles(font_size=em(5), line_height=1))["❉"])
 
-title_row = st.container(
-    horizontal=True,
-    vertical_alignment="bottom"
-)
+title_row = st.container(horizontal=True, vertical_alignment="bottom")
 
 with title_row:
     st.title(
@@ -144,11 +143,11 @@ if user_message:
     # Streamlit
     st_callback = get_streamlit_cb(answer_container)
     cfg = RunnableConfig(
-                    {
-                        "configurable": {
-                        "thread_id" : "1"  # Change later
-                            }
-                        }
+        {
+            "configurable": {
+                "thread_id": "1"  # Change later
+            }
+        }
     )
     cfg["callbacks"] = [st_callback]
 
@@ -170,6 +169,8 @@ if user_message:
         answer = agent.run_agent_streamlit(st.session_state.messages, cfg)
 
     # Write output
-    answer_container.write(answer['messages'][-1].content)
+    answer_container.write(answer["messages"][-1].content)
     # Add messages to chat history.
-    st.session_state.messages.append({"role": "assistant", "content": answer['messages'][-1].content})
+    st.session_state.messages.append(
+        {"role": "assistant", "content": answer["messages"][-1].content}
+    )

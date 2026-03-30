@@ -10,6 +10,7 @@ J. A. Moreno
 from .agent import Agent
 from .llm_setup import LLM, Retriever
 
+
 def main():
     print("Testing our agent\n")
 
@@ -20,17 +21,17 @@ professionally passionate about AI. Please briefly explain how you have
 put it to work for you in either or both areas of your life.
     """.strip()
 
-    #Initialize agent
+    # Initialize agent
 
     agent = Agent(llm=LLM().llm, retriever=Retriever().retriever)
     agent.draw_mermaid_png()
-    
+
     for part in agent.run_agent(user_query):
         if part["type"] == "messages":
             # MessagesStreamPart — (message_chunk, metadata) from LLM calls
             msg, metadata = part["data"]
             print(msg.content, end="", flush=True)
-    
+
     user_query = """
 They are asking: What are your three main motivators for this position?
 
@@ -42,7 +43,7 @@ Additional instructions: Keep your answer below 500 characters.
             # MessagesStreamPart — (message_chunk, metadata) from LLM calls
             msg, metadata = part["data"]
             print(msg.content, end="", flush=True)
-    
+
     user_query = """
 What was a challenge you found during your past experience and how did you solved it?
 
@@ -66,7 +67,6 @@ Within the URL, extract both the job post and questions.
             # MessagesStreamPart — (message_chunk, metadata) from LLM calls
             msg, metadata = part["data"]
             print(msg.content, end="", flush=True)
-    
 
     user_query = """
     Here are the job post text and the questions:
@@ -137,6 +137,7 @@ Lugar de trabajo: remoto híbrido en 03720, Nochebuena, CDMX
             # MessagesStreamPart — (message_chunk, metadata) from LLM calls
             msg, metadata = part["data"]
             print(msg.content, end="", flush=True)
+
 
 if __name__ == "__main__":
     main()

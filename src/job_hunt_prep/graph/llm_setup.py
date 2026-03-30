@@ -29,11 +29,12 @@ NUM_THREADS = None
 NUM_GPU = 999  # Uses all GPUs installed
 REASONING = False
 
+
 class BaseLLMConfig(ABC):
     """
     Base contract for any LLM setup
     """
-    
+
     @property
     @abstractmethod
     def llm(self) -> ChatOllama:
@@ -41,13 +42,13 @@ class BaseLLMConfig(ABC):
         Use to get the LLM instance
         """
         pass
-    
 
 
 class BaseRetrieverConfig(ABC):
     """
     Base contract for any retriever LLM setup
     """
+
     @property
     @abstractmethod
     def retriever(self) -> VectorStoreRetriever:
@@ -58,32 +59,35 @@ class BaseRetrieverConfig(ABC):
 
 
 class LLM(BaseLLMConfig):
-
     """
     Service class to set up all LLM-related parameters.
     """
+
     def __init__(self) -> None:
-        self._llm = ChatOllama(model=LLM_MODEL,
-                               num_ctx=NUM_CTX,
-                               reasoning=REASONING,
-                               num_gpu=NUM_GPU,
-                               num_thread=NUM_THREADS)
+        self._llm = ChatOllama(
+            model=LLM_MODEL,
+            num_ctx=NUM_CTX,
+            reasoning=REASONING,
+            num_gpu=NUM_GPU,
+            num_thread=NUM_THREADS,
+        )
 
     @property
     def llm(self) -> ChatOllama:
         return self._llm
-    
 
 
 class Retriever(BaseRetrieverConfig):
-
     """
     Service class to set up all LLM-related parameters.
     """
+
     def __init__(self) -> None:
         self._embeddings = OllamaEmbeddings(model=EMBEDDINGS_MODEL)
-        self._vector_store = Chroma(persist_directory=str(vector_store_path),
-                      embedding_function=self._embeddings)
+        self._vector_store = Chroma(
+            persist_directory=str(vector_store_path),
+            embedding_function=self._embeddings,
+        )
 
         self._retriever = self._vector_store.as_retriever()
 

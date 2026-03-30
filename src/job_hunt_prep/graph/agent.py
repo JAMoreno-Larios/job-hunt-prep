@@ -1,4 +1,4 @@
-""" agent.py
+"""agent.py
 
 Here we define our agent, we provide tools and middleware
 
@@ -14,8 +14,7 @@ from typing import Any, Iterator, List
 from langgraph.checkpoint.memory import InMemorySaver
 
 from langchain.agents import create_agent
-from langchain.agents.middleware import (TodoListMiddleware,
-    SummarizationMiddleware)
+from langchain.agents.middleware import TodoListMiddleware, SummarizationMiddleware
 
 from . import prompts
 from .tools import Tools
@@ -23,8 +22,8 @@ from .state import JobPrepState
 
 checkpointer = InMemorySaver()
 
-class Agent:
 
+class Agent:
     def __init__(self, llm: BaseChatModel, retriever: BaseRetriever) -> None:
         """
         Initialize class. Inject LLM and Retriever to be used
@@ -43,15 +42,11 @@ class Agent:
         self._app = create_agent(
             model=self._llm,
             tools=tools,
-            middleware=[
-                TodoListMiddleware(),
-                SummarizationMiddleware(model=self._llm)
-            ],
+            middleware=[TodoListMiddleware(), SummarizationMiddleware(model=self._llm)],
             checkpointer=InMemorySaver(),
             system_prompt=prompts.agent_prompt,
-            state_schema=JobPrepState
+            state_schema=JobPrepState,
         )
-
 
     @property
     def get_graph(self):
@@ -60,19 +55,21 @@ class Agent:
     def draw_mermaid_png(self, output_file_path="workflow.png"):
         self._app.get_graph().draw_mermaid_png(output_file_path=output_file_path)
 
-    def run_agent(self, query,
-                  config = RunnableConfig(
-                    {
-                        "configurable": {
-                        "thread_id" : "1"  # Change later
-                            }
-                        }
-                      )
-                  )-> Iterator[dict[str, Any] | Any]:
+    def run_agent(
+        self,
+        query,
+        config=RunnableConfig(
+            {
+                "configurable": {
+                    "thread_id": "1"  # Change later
+                }
+            }
+        ),
+    ) -> Iterator[dict[str, Any] | Any]:
         """
         Runs the agent workflow, forms the user input
         """
-    
+
         # Form input
         messages = [{"role": "user", "content": query}]
         # Invoke the graph
@@ -81,26 +78,29 @@ class Agent:
             config=config,
         )
 
-
-    def stream_agent(self, query,
-                  config = RunnableConfig(
-                    {
-                        "configurable": {
-                        "thread_id" : "1"  # Change later
-                            }
-                        }
-                      )
-                  )-> Iterator[dict[str, Any] | Any]:
+    def stream_agent(
+        self,
+        query,
+        config=RunnableConfig(
+            {
+                "configurable": {
+                    "thread_id": "1"  # Change later
+                }
+            }
+        ),
+    ) -> Iterator[dict[str, Any] | Any]:
         """
         Runs the agent workflow, forms the user input
         """
-    
-    # Define configuration
-        config = RunnableConfig({
-            "configurable": {
-                "thread_id" : "1"  # Change later
+
+        # Define configuration
+        config = RunnableConfig(
+            {
+                "configurable": {
+                    "thread_id": "1"  # Change later
+                }
             }
-        })
+        )
         # Form input
         messages = [{"role": "user", "content": query}]
         # Invoke the graph as a stream
@@ -108,17 +108,15 @@ class Agent:
             {"messages": messages},
             config=config,
             stream_mode=["messages", "updates"],
-            version="v2"
+            version="v2",
         )
 
-
-    def run_agent_streamlit(self, session_messages: List[str],
-                                config: RunnableConfig):
-            """
-            Runs the agent workflow, expect state messages 
-            """
-            # Invoke the graph
-            return self._app.invoke(
-                {"messages": session_messages},
-                config=config,
-            )
+    def run_agent_streamlit(self, session_messages: List[str], config: RunnableConfig):
+        """
+        Runs the agent workflow, expect state messages
+        """
+        # Invoke the graph
+        return self._app.invoke(
+            {"messages": session_messages},
+            config=config,
+        )

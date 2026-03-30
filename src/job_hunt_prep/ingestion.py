@@ -13,8 +13,11 @@ from pathlib import Path
 from dotenv import load_dotenv
 from langchain_core.documents import Document
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-from langchain_community.document_loaders import (DirectoryLoader,
-    PyPDFDirectoryLoader, TextLoader)
+from langchain_community.document_loaders import (
+    DirectoryLoader,
+    PyPDFDirectoryLoader,
+    TextLoader,
+)
 from langchain_chroma import Chroma
 from langchain_ollama import OllamaEmbeddings
 
@@ -26,6 +29,7 @@ CHUNK_SIZE = 1000
 CHUNK_OVERLAP = 100
 EMBEDDINGS_MODEL = "nomic-embed-text-v2-moe"
 BATCH_SIZE = 50
+
 
 # Define an enumeration for file types
 class Filetypes(Enum):
@@ -47,20 +51,21 @@ splitter = RecursiveCharacterTextSplitter(chunk_size=CHUNK_SIZE)
 embeddings = OllamaEmbeddings(model=EMBEDDINGS_MODEL, num_gpu=1)
 
 # Create vector store
-vector_store = Chroma(persist_directory=vector_store_path.__str__(),
-                      embedding_function=embeddings)
+vector_store = Chroma(
+    persist_directory=vector_store_path.__str__(), embedding_function=embeddings
+)
 
 # Define data ingestion pipeline methods.
 
-async def index_documents_async(documents: List[Document],
-                                batch_size: int = BATCH_SIZE):
+
+async def index_documents_async(
+    documents: List[Document], batch_size: int = BATCH_SIZE
+):
     """Process documents in batches asynchronously"""
 
     # Create batches
     batches = [
-        documents[i : i + batch_size] for i in range(
-            0, len(documents), batch_size
-                   )
+        documents[i : i + batch_size] for i in range(0, len(documents), batch_size)
     ]
 
     print(f"Vector store indexing: Split into {len(batches)} of {batch_size} docs each")
@@ -93,11 +98,12 @@ async def index_documents_async(documents: List[Document],
             f"VectorStore Indexing: Processed {successfull}/{len(batches)} batches successfully"
         )
 
+
 async def document_load_split_embed(path: str, type=Filetypes.OTHER):
     """
     Method used to load, split, and embed documents.
     Provide type as in "pdf", "txt", or "other".
-    """    
+    """
 
     # Instantiate the appropriate loader
     match type:
@@ -106,19 +112,23 @@ async def document_load_split_embed(path: str, type=Filetypes.OTHER):
             loader = PyPDFDirectoryLoader(path)
         case Filetypes.TXT:
             print("Loading text files")
-            loader = DirectoryLoader(path=path, glob='**/*.txt',
-                                     loader_cls=TextLoader,
-                                     use_multithreading=True)
+            loader = DirectoryLoader(
+                path=path,
+                glob="**/*.txt",
+                loader_cls=TextLoader,
+                use_multithreading=True,
+            )
         case Filetypes.OTHER:
             print("Loading other types of files")
-            loader = DirectoryLoader(path=path,
-                                     exclude=['**/*.pdf', '**/*.txt',
-                                              '**/README.md'],
-                                     use_multithreading=True)
+            loader = DirectoryLoader(
+                path=path,
+                exclude=["**/*.pdf", "**/*.txt", "**/README.md"],
+                use_multithreading=True,
+            )
     # Load documents concurrently
     documents = await loader.aload()
     # Split into chunks
-    print ("Splitting...")
+    print("Splitting...")
     chunks = splitter.split_documents(documents)
     print(f"Created {len(chunks)} chunks.")
 
@@ -128,20 +138,16 @@ async def document_load_split_embed(path: str, type=Filetypes.OTHER):
     print("Done ingesting.")
 
 
-
 # Define the ingestion pipeline
 async def run_ingestion_pipeline(document_path: Path):
     """
     Method that runs a ingestion pipeline where we will load all
-    documents found in the input document_path and create 
+    documents found in the input document_path and create
     a local vector store with Chroma.
     """
-    await document_load_split_embed(str(document_path),
-                              Filetypes.PDF)
-    await document_load_split_embed(str(document_path),
-                              Filetypes.TXT)
-    await document_load_split_embed(str(document_path),
-                              Filetypes.OTHER)
+    await document_load_split_embed(str(document_path), Filetypes.PDF)
+    await document_load_split_embed(str(document_path), Filetypes.TXT)
+    await document_load_split_embed(str(document_path), Filetypes.OTHER)
 
 
 if __name__ == "__main__":
