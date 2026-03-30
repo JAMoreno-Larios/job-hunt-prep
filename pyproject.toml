@@ -11,7 +11,7 @@ requires-python = ">=3.11"
 license = {text = "GPL-3.0-or-later"}
 license-files = ["LICENSE"]
 authors = [
-  {name = "José Agustín Moreno-Larios" email = "jose.agustin.moreno.larios@gmail.com"}
+  {name = "José Agustín Moreno-Larios", email = "jose.agustin.moreno.larios@gmail.com"}
 ]
 
 classifiers = [
@@ -32,10 +32,10 @@ dependencies = [
   "unstructured[docx]",
   "cryptography",
   "pypdf",
-  "pyright>=1.1.408",
   "streamlit>=1.55.0",
   "selenium>=4.41.0",
   "htbuilder>=0.9.0",
+  "typer>=0.24.1",
 ]
 
 [project.urls]
@@ -52,4 +52,10 @@ packages = ["src/job_hunt_prep"]
 include = [
   "/src",
   "/README.md",
+]
+
+[dependency-groups]
+dev = [
+    "pyright>=1.1.408",
+    "ruff>=0.15.8",
 ]
