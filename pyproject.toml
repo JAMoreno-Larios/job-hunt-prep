@@ -14,11 +14,14 @@ authors = [
   {name = "José Agustín Moreno-Larios", email = "jose.agustin.moreno.larios@gmail.com"}
 ]
 
+keywords = ["langchain", "ollama", "streamlit", "job-hunt", "ai-assistant"]
+
 classifiers = [
   "Intended Audience :: End Users/Desktop",
   "Programming Language :: Python :: 3.11",
   "Operating System :: OS Independent",
-  "Development Status :: 3 - Alpha"
+  "Development Status :: 3 - Alpha",
+  "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
 ]
 
 dependencies = [
@@ -43,7 +46,7 @@ Homepage = "https://github.com/JAMoreno-Larios/job-hunt-prep"
 Issues = "https://github.com/JAMoreno-Larios/job-hunt-prep/issues"
 
 [project.scripts]
-job-hunt-prep = "job_hunt_prep.main:run"
+job-hunt-prep = "job_hunt_prep.cli:app"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/job_hunt_prep"]
