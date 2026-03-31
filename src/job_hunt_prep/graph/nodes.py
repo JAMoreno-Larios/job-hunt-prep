@@ -6,13 +6,11 @@ J. A. Moreno
 
 from logging import exception
 
-from langgraph.prebuilt import ToolNode
 from .state import OutputState, JobPrepState
 from dotenv import load_dotenv
 from langchain_community.document_loaders import SeleniumURLLoader
 
-from . import llm_setup, prompts, tools
-
+from . import llm_setup, prompts
 # Load environment variables
 load_dotenv()
 
