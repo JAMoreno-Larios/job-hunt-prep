@@ -12,6 +12,7 @@ from langchain_community.document_loaders import SeleniumURLLoader
 from langchain.messages import ToolMessage
 from langchain_core.retrievers import BaseRetriever
 from langgraph.types import Command
+import functools
 
 from . import llm_setup
 
@@ -112,3 +113,15 @@ class Tools:
                 ],
             }
         )
+    
+    # LangChain tooling needs to have access to __name__
+    # We will create some wraps here to fix this.
+
+    @functools.wraps
+    def search_user_db_tool(self, query: str, runtime: ToolRuntime) -> Command:
+        return self.search_user_db(query, runtime)
+
+
+    @functools.wraps
+    def scrap_job_posting_tool(self, job_post_url: str, runtime: ToolRuntime) -> Command:
+        return self.scrap_job_posting(job_post_url, runtime)
