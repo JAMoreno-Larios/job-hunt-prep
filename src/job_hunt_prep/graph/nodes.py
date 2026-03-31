@@ -148,18 +148,3 @@ def draft_answer(state: JobPrepState) -> OutputState:
     )
     response = llm.llm.invoke(formatted_prompt)
     return {"draft_response": response}
-
-
-## TOOL NODES
-
-url_scrap_tool = ToolNode(
-    [
-        tools.scrap_job_posting,
-    ]
-)
-
-search_user_db_tool = ToolNode(
-    [
-        tools.search_user_db,
-    ]
-)
