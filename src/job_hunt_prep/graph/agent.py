@@ -15,6 +15,7 @@ from langgraph.checkpoint.memory import InMemorySaver
 
 from langchain.agents import create_agent
 from langchain.agents.middleware import TodoListMiddleware, SummarizationMiddleware
+from langchain_community.agent_toolkits import FileManagementToolkit
 
 from . import prompts
 from .tools import Tools
@@ -32,11 +33,15 @@ class Agent:
         self._retriever = retriever
         self._Tools = Tools(retriever)
 
-        # Register tools
-        tools = [
-            tool(self._Tools.scrap_job_posting),
-            tool(self._Tools.search_user_db),
-        ]
+        # Initialize file management toolkit, get write_file tool into list
+        tools = (FileManagementToolkit(root_dir=__file__,
+                                      selected_tools=["write_file"])
+                .get_tools()
+                 )
+
+        # Register custom tools
+        tools.append(tool(self._Tools.scrap_job_posting))
+        tools.append(tool(self._Tools.search_user_db))
 
         # Create agent
         self._app = create_agent(
