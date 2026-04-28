@@ -219,3 +219,6 @@ __marimo__/
 data/**
 !data/embeddings/README.md
 !data/user-data/README.md
+
+# Ignore the output directory
+output/**
