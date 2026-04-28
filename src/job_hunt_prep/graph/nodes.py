@@ -11,6 +11,7 @@ from dotenv import load_dotenv
 from langchain_community.document_loaders import SeleniumURLLoader
 
 from . import llm_setup, prompts
+
 # Load environment variables
 load_dotenv()
 

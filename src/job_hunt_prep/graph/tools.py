@@ -113,7 +113,7 @@ class Tools:
                 ],
             }
         )
-    
+
     # LangChain tooling needs to have access to __name__
     # We will create some wraps here to fix this.
 
@@ -121,7 +121,8 @@ class Tools:
     def search_user_db_tool(self, query: str, runtime: ToolRuntime) -> Command:
         return self.search_user_db(query, runtime)
 
-
     @functools.wraps
-    def scrap_job_posting_tool(self, job_post_url: str, runtime: ToolRuntime) -> Command:
+    def scrap_job_posting_tool(
+        self, job_post_url: str, runtime: ToolRuntime
+    ) -> Command:
         return self.scrap_job_posting(job_post_url, runtime)

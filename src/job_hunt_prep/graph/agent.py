@@ -34,10 +34,9 @@ class Agent:
         self._Tools = Tools(retriever)
 
         # Initialize file management toolkit, get write_file tool into list
-        tools = (FileManagementToolkit(root_dir=__file__,
-                                      selected_tools=["write_file"])
-                .get_tools()
-                 )
+        tools = FileManagementToolkit(
+            root_dir=__file__, selected_tools=["write_file"]
+        ).get_tools()
 
         # Register custom tools
         tools.append(tool(self._Tools.scrap_job_posting))
