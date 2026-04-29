@@ -11,6 +11,7 @@ from langchain.tools import tool
 from langchain_core.retrievers import BaseRetriever
 from langgraph.graph.state import RunnableConfig
 from typing import Any, Iterator, List
+from pathlib import Path
 from langgraph.checkpoint.memory import InMemorySaver
 
 from langchain.agents import create_agent
@@ -23,6 +24,7 @@ from .state import JobPrepState
 
 checkpointer = InMemorySaver()
 
+root_dir = Path(__file__).absolute().parents[3] / "./output/"
 
 class Agent:
     def __init__(self, llm: BaseChatModel, retriever: BaseRetriever) -> None:
@@ -35,7 +37,7 @@ class Agent:
 
         # Initialize file management toolkit, get write_file tool into list
         tools = FileManagementToolkit(
-            root_dir=__file__, selected_tools=["write_file"]
+            root_dir=str(root_dir), selected_tools=["write_file"]
         ).get_tools()
 
         # Register custom tools
