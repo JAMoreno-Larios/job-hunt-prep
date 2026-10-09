@@ -1,0 +1,5 @@
+# Here you will place the Langsmith API keys and whatnot
+LANGSMITH_API_KEY=your-key-here
+LANGSMITH_TRACING=true
+LANGSMITH_ENDPOINT=https://api.smith.langchain.com
+LANGSMITH_PROJECT=job-hunt-prep
